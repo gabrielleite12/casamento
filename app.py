@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 # Configurações
 SERVICE_ACCOUNT_FILE = 'credenciais.json'  # arquivo da conta de serviço
-PASTA_ID = 'SEU_ID_DA_PASTA_DO_DRIVE'      # ID da pasta no Google Drive
+PASTA_ID = '1mfSWCfboJH2kNVAZGLBz8OHSbSd-DOwD'      # ID da pasta no Google Drive
 
 # Credenciais da API
 credenciais = service_account.Credentials.from_service_account_file(
