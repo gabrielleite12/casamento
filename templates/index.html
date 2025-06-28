@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload de Imagem para o Google Drive</title>
+</head>
+<body>
+  <h2>Enviar Imagem para o Google Drive</h2>
+
+  <!-- Selecionar imagem do dispositivo -->
+  <input type="file" id="fileInput" accept="image/*"><br><br>
+
+  <!-- Câmera -->
+  <video id="camera" width="320" height="240" autoplay></video><br>
+  <button onclick="tirarFoto()">Capturar Foto</button>
+  <canvas id="canvas" width="320" height="240" style="display: none;"></canvas><br><br>
+
+  <!-- Botão de envio -->
+  <button onclick="enviarImagem()">Enviar para o Drive</button>
+
+  <script>
+    const camera = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let imagemBlob = null;
+
+    // Ativar a câmera
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        camera.srcObject = stream;
+      }).catch(() => {
+        alert("Não foi possível acessar a câmera.");
+      });
+
+    function tirarFoto() {
+      ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => {
+        imagemBlob = blob;
+        alert("Foto capturada!");
+      }, 'image/jpeg');
+    }
+
+    async function enviarImagem() {
+      const fileInput = document.getElementById('fileInput');
+      const formData = new FormData();
+
+      if (fileInput.files.length > 0) {
+        formData.append('imagem', fileInput.files[0]);
+      } else if (imagemBlob) {
+        formData.append('imagem', imagemBlob, 'foto_camera.jpg');
+      } else {
+        alert('Por favor, selecione ou capture uma imagem.');
+        return;
+      }
+
+      const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const texto = await response.text();
+      alert(texto);
+    }
+  </script>
+</body>
+</html>
