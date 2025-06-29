@@ -43,5 +43,27 @@ def index():
 
     return render_template("index.html")
 
+@app.route('/album')
+def album():
+    folder_path = '/Uploads'  # raiz do app: /casamentomar
+    fotos = []
+
+    try:
+        res = dbx.files_list_folder(folder_path)
+        while True:
+            for entry in res.entries:
+                if isinstance(entry, dropbox.files.FileMetadata):
+                    if entry.name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')):
+                        temp_link = dbx.files_get_temporary_link(entry.path_lower).link
+                        fotos.append(temp_link)
+            if res.has_more:
+                res = dbx.files_list_folder_continue(res.cursor)
+            else:
+                break
+    except Exception as e:
+        print("Erro ao acessar Dropbox:", e)
+
+    return render_template('album.html', fotos=fotos)
+
 if __name__ == "__main__":
     app.run(debug=True)
