@@ -2,100 +2,107 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Capturar ou Enviar Imagem</title>
-<style>
-  * {
-    box-sizing: border-box;
-  }
+  <title>Cabine de Fotos - Casamento</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(to right, #fff0f5, #e6e6fa);
-    margin: 0;
-    padding: 0;
-    color: #333;
-    text-align: center;
-  }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #fff0f5, #e6e6fa);
+      color: #333;
+      text-align: center;
+    }
 
-  h2, h3, h4 {
-    margin-top: 20px;
-    color: #6a1b9a;
-  }
+    h2, h3, h4 {
+      margin: 20px 0 10px;
+      color: #6a1b9a;
+    }
 
-  form {
-    margin: 20px auto;
-    max-width: 400px;
-    background: white;
-    padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  }
-
-  input[type="file"] {
-    margin-top: 10px;
-    display: block;
-    width: 100%;
-  }
-
-  button {
-    padding: 10px 20px;
-    background-color: #ab47bc;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-weight: bold;
-    margin: 10px 5px;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-
-  button:hover {
-    background-color: #8e24aa;
-  }
-
-  video, canvas, img {
-    width: 100%;
-    max-width: 360px;
-    margin-top: 10px;
-    border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.15);
-  }
-
-  ul {
-    list-style: none;
-    padding: 0;
-    color: green;
-    font-weight: bold;
-  }
-
-  #preview-container {
-    margin-top: 20px;
-    display: none;
-  }
-
-  #capture {
-    background-color: #7b1fa2;
-  }
-
-  #capture:hover {
-    background-color: #6a1b9a;
-  }
-
-  @media (max-width: 600px) {
     form {
-      width: 90%;
+      margin: 20px auto;
+      max-width: 400px;
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 10px auto;
+      width: 100%;
     }
 
     button {
-      width: 100%;
+      padding: 12px 20px;
+      background-color: #ab47bc;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      margin: 10px 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #8e24aa;
+    }
+
+    video, canvas {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 999;
+      display: none;
+    }
+
+    #preview-container {
+      display: none;
+      margin-top: 20px;
+    }
+
+    #preview {
+      max-width: 360px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
       margin-bottom: 10px;
     }
-  }
-</style>
 
+    .overlay-buttons {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1001;
+      display: flex;
+      gap: 20px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 600px) {
+      form {
+        width: 90%;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h2>Enviar imagem para Dropbox</h2>
+  <h2>💍 Cabine de Fotos do Casamento</h2>
 
   {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -107,19 +114,20 @@
     {% endif %}
   {% endwith %}
 
-  <!-- Botão para selecionar imagem da galeria -->
   <form method="post" enctype="multipart/form-data" id="upload-form">
     <label>
       📁 Selecionar da galeria:
       <input type="file" name="imagem" accept="image/*">
     </label>
-    <br><br>
   </form>
 
-  <!-- Captura pela Câmera -->
   <h3>📷 Tirar foto agora</h3>
+  <button id="abrirCamera">Abrir câmera</button>
+
   <video id="camera" autoplay></video>
-  <button id="capture">📸 Capturar</button>
+  <div class="overlay-buttons hidden" id="botoesCamera">
+    <button id="capture">📸 Capturar</button>
+  </div>
 
   <div id="preview-container">
     <h4>Pré-visualização</h4>
@@ -132,24 +140,27 @@
   </div>
 
   <script>
+    const abrirCameraBtn = document.getElementById('abrirCamera');
     const video = document.getElementById('camera');
     const canvas = document.getElementById('preview');
     const previewContainer = document.getElementById('preview-container');
     const capturedImageInput = document.getElementById('captured-image');
+    const botoesCamera = document.getElementById('botoesCamera');
+    let stream = null;
 
-    const constraints = {
-      video: { facingMode: "environment" },
-      audio: false
-    };
-
-    // Solicita câmera
-    navigator.mediaDevices.getUserMedia(constraints)
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(error => {
-        alert("Erro ao acessar a câmera: " + error.message);
-      });
+    abrirCameraBtn.addEventListener('click', () => {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+        .then(s => {
+          stream = s;
+          video.srcObject = stream;
+          video.style.display = 'block';
+          botoesCamera.classList.remove('hidden');
+          abrirCameraBtn.style.display = 'none';
+        })
+        .catch(err => {
+          alert("Erro ao acessar a câmera: " + err.message);
+        });
+    });
 
     document.getElementById('capture').addEventListener('click', () => {
       const context = canvas.getContext('2d');
@@ -160,11 +171,18 @@
       const dataURL = canvas.toDataURL('image/jpeg');
       capturedImageInput.value = dataURL;
       previewContainer.style.display = 'block';
+
+      // Esconder a câmera
+      video.pause();
+      stream.getTracks().forEach(track => track.stop());
+      video.style.display = 'none';
+      botoesCamera.classList.add('hidden');
     });
 
     function refazer() {
       previewContainer.style.display = 'none';
       capturedImageInput.value = '';
+      abrirCameraBtn.style.display = 'inline-block';
     }
   </script>
 </body>
