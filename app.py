@@ -1,56 +1,47 @@
-from flask import Flask, request, render_template
-from werkzeug.utils import secure_filename
-import io
-import os
 
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
+from flask import Flask, render_template, request, redirect, flash
+import dropbox
+import base64
+from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
+
+# ✅ Token do Dropbox
+DROPBOX_ACCESS_TOKEN = "sl.u.AF2-3mJ3LdIE2A2pnma008dzL0zbORdHPB2OxiNXeJ6lkwm3TJeZcuDQDYrxTeCBzuR5ROjwDFeAPnSMOsRJd8QYh-qGuIyt0RNCTrU1W9KdNbart1xbluVmaMLYW-fZNHxococh4WqpqSlPNrU9DylWFj8hZZmTWGOXkNkI1FO228wOcKq76I6i-3rpXbmtOVMBaUsQqanosbUTNxEXwHPZk68oJ09VETQKmeAZCfAEzpOqYGXrNcPg97Bp937ZRm6lKIdO2a4KiuGsVwrRWLKMdq1DVBhbQMXrMOxpRyw307YUWmaxhx1eGOgYjGlHZJYMhi7R36pVIK4QtItcYax4mwjG5UJtaUVXYnODgWy8XtFsWnmbiLKenqJJp87brUdcJpeu2AEA1RLggpG8uIbjClwWzfTsgp1dDOdvtnHjG9IMTWb1rWW8khtJeLeHvqRW0bijw6hyipWF57byQQfaf1e-yBcAQScW1aYdmslQfpf_Ub_m9j6cvrZL91hnHNv4Ld6Njak6IXlj_AAGmI7HTOQkokzF74KBiw4K7alikG25MS7pZkJy3FWBRXojYYVMraWqy-Mqej1azNiJG9nFlW6HPr4RYuD32pLci4peoNYyr0Zzsl_42yQXWU4qF2EdhL7TFIyIxGS2SmHQ7dKoHB72e8pPyZvWR3fM5bA-arTeiK4jBqYIUUNjvmCBWuya0Hql3KIEoybsVjAouTP5JlFakOskG8CBhKhIOCL_7L2GqBNRgPw26Npl3xBXt1mYKHwoMKHClK7olssgI14IVxNu-duA9mPOtsgNBd7bb6CYh77dVb8BcI2IntnEMAtoqqh32Q4EBVs9ONA89YuVYTc1r_J8MxAU3j7rrlvKcULmQ6P31Z2c5abzrphNpuuh5pz3ZpxvtEuVf4dGdNM3WKN2aEOxTRxh5wT1KJF5O5BdMjrtONNe4O6OAUzeaGwqPpEoFSuWm7ZrexcBYn2Uyakv8n6vDupbStEt7wMC9n5YI88FkemYhf28dwcLq_DBQ49xy85b_RhSJaUu54dGJ4M1k8i3l24zrvnM2Ie_cIdUkV2-N5l1AkF5flXa7bpa7Tm0gq52N8jzOtlm5mPAo_sLkg3JTBjsxcl8orp3jsBo9tDSDrWdKjg6jtvebmprIh-g2b5CyNKnWoOp8ByqmcYnkhr0fPaTpYunsm8XkIDZ1jYeKGj12IFCw_o3MBiY2R8zrjAyTigKMUqaDLZckoC6dcaRZDkPAjDi1cjF2O2BK5Zq5G2npLTFYfCPa5DoH3dnVkw1Ozv0iqAqgpaBnyqEkORygbiaRQ9plHwN2w"
+dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
 app = Flask(__name__)
+app.secret_key = "segredo_seguro"
 
-# Configurações
-SERVICE_ACCOUNT_FILE = 'credenciais.json'  # arquivo da conta de serviço
-PASTA_ID = '1mfSWCfboJH2kNVAZGLBz8OHSbSd-DOwD'      # ID da pasta no Google Drive
+# Pasta local (opcional)
+app.config['UPLOAD_FOLDER'] = "static/uploads"
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Credenciais da API
-credenciais = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE,
-    scopes=["https://www.googleapis.com/auth/drive.file"]
-)
-drive_service = build('drive', 'v3', credentials=credenciais)
-
-
-@app.route('/')
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template('index.html')
+    if request.method == "POST":
+        # Upload tradicional
+        if 'imagem' in request.files and request.files['imagem'].filename != '':
+            imagem = request.files['imagem']
+            nome_arquivo = secure_filename(imagem.filename)
+            caminho_dropbox = f"/uploads/{nome_arquivo}"
+            dbx.files_upload(imagem.read(), caminho_dropbox)
+            flash("Imagem enviada com sucesso!")
+            return redirect("/")
 
+        # Upload via câmera (base64)
+        if 'captured_image' in request.form:
+            data_url = request.form['captured_image']
+            if data_url.startswith("data:image"):
+                header, encoded = data_url.split(",", 1)
+                image_data = base64.b64decode(encoded)
+                nome = datetime.now().strftime("foto_%Y%m%d_%H%M%S.jpg")
+                caminho_dropbox = f"/uploads/{nome}"
+                dbx.files_upload(image_data, caminho_dropbox)
+                flash("Foto tirada e enviada com sucesso!")
+                return redirect("/")
 
-@app.route('/upload', methods=['POST'])
-def upload():
-    if 'imagem' not in request.files:
-        return "Nenhum arquivo enviado", 400
+    return render_template("index.html")
 
-    imagem = request.files['imagem']
-    if imagem.filename == '':
-        return "Nome do arquivo vazio", 400
-
-    filename = secure_filename(imagem.filename)
-
-    file_metadata = {
-        'name': filename,
-        'parents': [PASTA_ID]
-    }
-    media = MediaIoBaseUpload(io.BytesIO(imagem.read()), mimetype='image/jpeg')
-
-    drive_service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields='id'
-    ).execute()
-
-    return "Imagem enviada com sucesso!"
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
