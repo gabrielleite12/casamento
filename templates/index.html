@@ -1,66 +1,170 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Upload de Imagem para o Google Drive</title>
-</head>
-<body>
-  <h2>Enviar Imagem para o Google Drive</h2>
+  <title>Capturar ou Enviar Imagem</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
 
-  <!-- Selecionar imagem do dispositivo -->
-  <input type="file" id="fileInput" accept="image/*"><br><br>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(to right, #fff0f5, #e6e6fa);
+    margin: 0;
+    padding: 0;
+    color: #333;
+    text-align: center;
+  }
 
-  <!-- Câmera -->
-  <video id="camera" width="320" height="240" autoplay></video><br>
-  <button onclick="tirarFoto()">Capturar Foto</button>
-  <canvas id="canvas" width="320" height="240" style="display: none;"></canvas><br><br>
+  h2, h3, h4 {
+    margin-top: 20px;
+    color: #6a1b9a;
+  }
 
-  <!-- Botão de envio -->
-  <button onclick="enviarImagem()">Enviar para o Drive</button>
+  form {
+    margin: 20px auto;
+    max-width: 400px;
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
 
-  <script>
-    const camera = document.getElementById('camera');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
+  input[type="file"] {
+    margin-top: 10px;
+    display: block;
+    width: 100%;
+  }
 
-    let imagemBlob = null;
+  button {
+    padding: 10px 20px;
+    background-color: #ab47bc;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    margin: 10px 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
 
-    // Ativar a câmera
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        camera.srcObject = stream;
-      }).catch(() => {
-        alert("Não foi possível acessar a câmera.");
-      });
+  button:hover {
+    background-color: #8e24aa;
+  }
 
-    function tirarFoto() {
-      ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(blob => {
-        imagemBlob = blob;
-        alert("Foto capturada!");
-      }, 'image/jpeg');
+  video, canvas, img {
+    width: 100%;
+    max-width: 360px;
+    margin-top: 10px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.15);
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    color: green;
+    font-weight: bold;
+  }
+
+  #preview-container {
+    margin-top: 20px;
+    display: none;
+  }
+
+  #capture {
+    background-color: #7b1fa2;
+  }
+
+  #capture:hover {
+    background-color: #6a1b9a;
+  }
+
+  @media (max-width: 600px) {
+    form {
+      width: 90%;
     }
 
-    async function enviarImagem() {
-      const fileInput = document.getElementById('fileInput');
-      const formData = new FormData();
+    button {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  }
+</style>
 
-      if (fileInput.files.length > 0) {
-        formData.append('imagem', fileInput.files[0]);
-      } else if (imagemBlob) {
-        formData.append('imagem', imagemBlob, 'foto_camera.jpg');
-      } else {
-        alert('Por favor, selecione ou capture uma imagem.');
-        return;
-      }
+</head>
+<body>
+  <h2>Enviar imagem para Dropbox</h2>
 
-      const response = await fetch('/upload', {
-        method: 'POST',
-        body: formData
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Botão para selecionar imagem da galeria -->
+  <form method="post" enctype="multipart/form-data" id="upload-form">
+    <label>
+      📁 Selecionar da galeria:
+      <input type="file" name="imagem" accept="image/*">
+    </label>
+    <br><br>
+  </form>
+
+  <!-- Captura pela Câmera -->
+  <h3>📷 Tirar foto agora</h3>
+  <video id="camera" autoplay></video>
+  <button id="capture">📸 Capturar</button>
+
+  <div id="preview-container">
+    <h4>Pré-visualização</h4>
+    <canvas id="preview"></canvas>
+    <form method="post" enctype="multipart/form-data" id="photo-form">
+      <input type="hidden" name="captured_image" id="captured-image">
+      <button type="submit">✅ Usar esta foto</button>
+      <button type="button" onclick="refazer()">🔁 Tirar outra</button>
+    </form>
+  </div>
+
+  <script>
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('preview');
+    const previewContainer = document.getElementById('preview-container');
+    const capturedImageInput = document.getElementById('captured-image');
+
+    const constraints = {
+      video: { facingMode: "environment" },
+      audio: false
+    };
+
+    // Solicita câmera
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(error => {
+        alert("Erro ao acessar a câmera: " + error.message);
       });
 
-      const texto = await response.text();
-      alert(texto);
+    document.getElementById('capture').addEventListener('click', () => {
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const dataURL = canvas.toDataURL('image/jpeg');
+      capturedImageInput.value = dataURL;
+      previewContainer.style.display = 'block';
+    });
+
+    function refazer() {
+      previewContainer.style.display = 'none';
+      capturedImageInput.value = '';
     }
   </script>
 </body>
