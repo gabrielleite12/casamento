@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Álbum de Fotos</title>
+    <style>
+        body {
+            background-color: #f9f6ff;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #6a1b9a;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .gallery img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: transform 0.3s;
+        }
+
+        .gallery img:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <h2>📸 Álbum de Fotos</h2>
+
+    {% if fotos %}
+    <div class="gallery">
+        {% for foto in fotos %}
+            <img src="{{ foto }}" alt="Foto do álbum">
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>💔 Nenhuma foto foi enviada ainda. Seja o primeiro a registrar um momento especial!</p>
+    {% endif %}
+</body>
+</html>
