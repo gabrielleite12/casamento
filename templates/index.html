@@ -17,7 +17,7 @@
       text-align: center;
     }
 
-    h2, h3, h4 {
+    h2, h3 {
       margin: 20px 0 10px;
       color: #6a1b9a;
     }
@@ -53,7 +53,7 @@
       background-color: #8e24aa;
     }
 
-    video, canvas {
+    video {
       width: 100vw;
       height: 100vh;
       object-fit: cover;
@@ -64,21 +64,28 @@
       display: none;
     }
 
-    #preview-container {
+    #preview-fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: black;
       display: none;
-      margin-top: 20px;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 1000;
     }
 
-    #preview {
-      max-width: 360px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.15);
-      margin-bottom: 10px;
+    #preview-img {
+      max-width: 100%;
+      max-height: 100vh;
     }
 
     .overlay-buttons {
       position: fixed;
-      bottom: 30px;
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 1001;
@@ -86,8 +93,8 @@
       gap: 20px;
     }
 
-    .hidden {
-      display: none !important;
+    #abrirCamera {
+      margin-bottom: 10px;
     }
 
     @media (max-width: 600px) {
@@ -97,6 +104,10 @@
 
       button {
         width: 100%;
+      }
+
+      .overlay-buttons {
+        flex-direction: column;
       }
     }
   </style>
@@ -125,27 +136,29 @@
   <button id="abrirCamera">Abrir câmera</button>
 
   <video id="camera" autoplay></video>
-  <div class="overlay-buttons hidden" id="botoesCamera">
+  <div class="overlay-buttons" id="botoesCamera" style="display: none;">
     <button id="capture">📸 Capturar</button>
   </div>
 
-  <div id="preview-container">
-    <h4>Pré-visualização</h4>
-    <canvas id="preview"></canvas>
-    <form method="post" enctype="multipart/form-data" id="photo-form">
-      <input type="hidden" name="captured_image" id="captured-image">
-      <button type="submit">✅ Usar esta foto</button>
-      <button type="button" onclick="refazer()">🔁 Tirar outra</button>
-    </form>
+  <!-- Tela de pré-visualização em tela cheia -->
+  <div id="preview-fullscreen">
+    <img id="preview-img" src="">
+    <div class="overlay-buttons">
+      <form method="post" enctype="multipart/form-data" id="photo-form">
+        <input type="hidden" name="captured_image" id="captured-image">
+        <button type="submit">✅ Usar esta foto</button>
+        <button type="button" onclick="refazer()">🔁 Tirar outra</button>
+      </form>
+    </div>
   </div>
 
   <script>
     const abrirCameraBtn = document.getElementById('abrirCamera');
     const video = document.getElementById('camera');
-    const canvas = document.getElementById('preview');
-    const previewContainer = document.getElementById('preview-container');
-    const capturedImageInput = document.getElementById('captured-image');
     const botoesCamera = document.getElementById('botoesCamera');
+    const previewFullscreen = document.getElementById('preview-fullscreen');
+    const previewImg = document.getElementById('preview-img');
+    const capturedImageInput = document.getElementById('captured-image');
     let stream = null;
 
     abrirCameraBtn.addEventListener('click', () => {
@@ -154,7 +167,7 @@
           stream = s;
           video.srcObject = stream;
           video.style.display = 'block';
-          botoesCamera.classList.remove('hidden');
+          botoesCamera.style.display = 'flex';
           abrirCameraBtn.style.display = 'none';
         })
         .catch(err => {
@@ -163,24 +176,28 @@
     });
 
     document.getElementById('capture').addEventListener('click', () => {
-      const context = canvas.getContext('2d');
+      const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const dataURL = canvas.toDataURL('image/jpeg');
       capturedImageInput.value = dataURL;
-      previewContainer.style.display = 'block';
+      previewImg.src = dataURL;
 
-      // Esconder a câmera
+      // Parar a câmera
       video.pause();
       stream.getTracks().forEach(track => track.stop());
       video.style.display = 'none';
-      botoesCamera.classList.add('hidden');
+      botoesCamera.style.display = 'none';
+
+      // Mostrar preview em tela cheia
+      previewFullscreen.style.display = 'flex';
     });
 
     function refazer() {
-      previewContainer.style.display = 'none';
+      previewFullscreen.style.display = 'none';
       capturedImageInput.value = '';
       abrirCameraBtn.style.display = 'inline-block';
     }
