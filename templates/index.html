@@ -155,55 +155,100 @@
     </div>
   </div>
 
-  <script>
-    const abrirCameraBtn = document.getElementById('abrirCamera');
-    const video = document.getElementById('camera');
-    const botoesCamera = document.getElementById('botoesCamera');
-    const previewFullscreen = document.getElementById('preview-fullscreen');
-    const previewImg = document.getElementById('preview-img');
-    const capturedImageInput = document.getElementById('captured-image');
-    let stream = null;
+<script>
+  const abrirCameraBtn = document.getElementById('abrirCamera');
+  const video = document.getElementById('camera');
+  const botoesCamera = document.getElementById('botoesCamera');
+  const previewFullscreen = document.getElementById('preview-fullscreen');
+  const previewImg = document.getElementById('preview-img');
+  const capturedImageInput = document.getElementById('captured-image');
+  const captureBtn = document.getElementById('capture');
 
-    abrirCameraBtn.addEventListener('click', () => {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
-        .then(s => {
-          stream = s;
-          video.srcObject = stream;
-          video.style.display = 'block';
-          botoesCamera.style.display = 'flex';
-          abrirCameraBtn.style.display = 'none';
-        })
-        .catch(err => {
-          alert("Erro ao acessar a câmera: " + err.message);
-        });
-    });
+  let stream = null;
+  let mediaRecorder = null;
+  let videoChunks = [];
+  let isRecording = false;
+  let holdTimer = null;
 
-    document.getElementById('capture').addEventListener('click', () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const context = canvas.getContext('2d');
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  abrirCameraBtn.addEventListener('click', () => {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true })
+      .then(s => {
+        stream = s;
+        video.srcObject = stream;
+        video.style.display = 'block';
+        botoesCamera.style.display = 'flex';
+        abrirCameraBtn.style.display = 'none';
+      })
+      .catch(err => {
+        alert("Erro ao acessar a câmera: " + err.message);
+      });
+  });
 
-      const dataURL = canvas.toDataURL('image/jpeg');
-      capturedImageInput.value = dataURL;
-      previewImg.src = dataURL;
+  captureBtn.addEventListener('click', () => {
+    if (!isRecording) capturarFoto();
+  });
 
-      // Parar câmera
+  captureBtn.addEventListener('mousedown', () => {
+    holdTimer = setTimeout(() => {
+      iniciarGravacao();
+    }, 400); // se segurar por mais de 400ms, grava
+  });
+
+  captureBtn.addEventListener('mouseup', () => {
+    clearTimeout(holdTimer);
+    if (isRecording) pararGravacao();
+  });
+
+  function capturarFoto() {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const dataURL = canvas.toDataURL('image/jpeg');
+    capturedImageInput.value = dataURL;
+    previewImg.src = dataURL;
+
+    video.pause();
+    stream.getTracks().forEach(track => track.stop());
+    video.style.display = 'none';
+    botoesCamera.style.display = 'none';
+    previewFullscreen.style.display = 'flex';
+  }
+
+  function iniciarGravacao() {
+    isRecording = true;
+    videoChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => videoChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(videoChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      previewImg.src = url;
+      capturedImageInput.value = ''; // Não envia vídeo pelo formulário HTML, apenas preview
+
+      // Stop video feed
       video.pause();
       stream.getTracks().forEach(track => track.stop());
       video.style.display = 'none';
       botoesCamera.style.display = 'none';
-
-      // Mostrar preview
       previewFullscreen.style.display = 'flex';
-    });
+    };
+    mediaRecorder.start();
+  }
 
-    function refazer() {
-      previewFullscreen.style.display = 'none';
-      capturedImageInput.value = '';
-      abrirCameraBtn.style.display = 'inline-block';
-    }
-  </script>
+  function pararGravacao() {
+    isRecording = false;
+    mediaRecorder.stop();
+  }
+
+  function refazer() {
+    previewFullscreen.style.display = 'none';
+    capturedImageInput.value = '';
+    abrirCameraBtn.style.display = 'inline-block';
+  }
+</script>
+
 </body>
 </html>
