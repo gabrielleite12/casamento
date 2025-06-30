@@ -43,16 +43,13 @@ def index():
                 return redirect("/")
 
         # Upload vídeo via câmera (novo)
-        if 'captured_video' in request.form:
-            data_url = request.form['captured_video']
-            if data_url.startswith("data:video"):
-                header, encoded = data_url.split(",", 1)
-                video_data = base64.b64decode(encoded)
-                nome = datetime.now().strftime("video_%Y%m%d_%H%M%S.webm")
-                caminho_dropbox = f"/uploads/{nome}"
-                dbx.files_upload(video_data, caminho_dropbox)
-                flash("Vídeo gravado e enviado com sucesso!")
-                return redirect("/")
+       if 'video_blob' in request.files:
+    video = request.files['video_blob']
+    nome = datetime.now().strftime("video_%Y%m%d_%H%M%S.webm")
+    caminho_dropbox = f"/uploads/{nome}"
+    dbx.files_upload(video.read(), caminho_dropbox)
+    flash("Vídeo gravado e enviado com sucesso!")
+    return redirect("/")
 
     return render_template("index.html")
 
