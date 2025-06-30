@@ -20,7 +20,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        # Upload tradicional
+        # 📁 Upload tradicional de imagem da galeria
         if 'imagem' in request.files and request.files['imagem'].filename != '':
             imagem = request.files['imagem']
             nome_arquivo = secure_filename(imagem.filename)
@@ -29,7 +29,7 @@ def index():
             flash("Imagem enviada com sucesso!")
             return redirect("/")
 
-        # Upload via câmera (base64)
+        # 📷 Upload via câmera - Foto
         if 'captured_image' in request.form:
             data_url = request.form['captured_image']
             if data_url.startswith("data:image"):
@@ -39,6 +39,18 @@ def index():
                 caminho_dropbox = f"/uploads/{nome}"
                 dbx.files_upload(image_data, caminho_dropbox)
                 flash("Foto tirada e enviada com sucesso!")
+                return redirect("/")
+
+        # 🎥 Upload via câmera - Vídeo
+        if 'captured_video' in request.form:
+            data_url = request.form['captured_video']
+            if data_url.startswith("data:video"):
+                header, encoded = data_url.split(",", 1)
+                video_data = base64.b64decode(encoded)
+                nome = datetime.now().strftime("video_%Y%m%d_%H%M%S.webm")
+                caminho_dropbox = f"/uploads/{nome}"
+                dbx.files_upload(video_data, caminho_dropbox)
+                flash("Vídeo gravado e enviado com sucesso!")
                 return redirect("/")
 
     return render_template("index.html")
