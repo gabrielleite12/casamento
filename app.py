@@ -1,26 +1,83 @@
-
-from flask import Flask, render_template, request, redirect, flash
-import dropbox
+from flask import Flask, render_template, request, redirect, flash, session
 import base64
 from datetime import datetime
 import os
+import requests
+import dropbox
 from werkzeug.utils import secure_filename
 
-# ✅ Token do Dropbox
-DROPBOX_ACCESS_TOKEN = "sl.u.AF2G43AziD3mKTGmsno2vzorGVNnYEZDfAD3nenmUOovlqlhrqUvCqRhLBUfGjIyemeazOklYl_8Lv0It3Vi2V5LmJgs91CyRm9nSvSl7hZ-NWTNR8A-g1Nt5b8YLofUJcCWHL_7vy_S2WCeJDCseUgpOHpxgTxHIRdqA0kgYHl0QFI_MbahZ_O7Rdv4_r_qHgFf-BJoP4yom6d-JJFI9nXlgGal5a_1U3qurG06E0wnua5m2Bq3rvs_3Zne2mrOCoVdRAH24PnQWBp7IDR3pQX49Vm4XqtgOC8uevwTxzXqpUhE3PyYt8bEASTxZDXlzYR1xfFM2eZxRL0t0cNlGD6h7fQkiRLKAPGlED6axn8_AHEpvJZmuqK1El9SEWlBQJPkr23wZT9LstVwat6rtX5EzU1B8eRfV7VsxRsp_8ZG7FuoOz_UU0rs9I-7KOkcIXPfTdNw-HcRNngKszh7ozvlJ9rqs_0Qau2xrhbJOayFIMTYYp3CUWL9oEyBaBQ1WCgTvsCnfJfcv-GbSKUwTMg8QgZygWsRJpLgO87aPrXTg6nqNXg75Fqoy1wkvmt_UvgrTABtA0_0eJGW5y-VnpaiV0_jch-AQszq502_1OYwMonk97wb0jZGHqMcLXX2BYifU_dUVdpO1RuKBHqx0QAr12dAsc5bMs_XSfQm9lUn6nouB_0PTww4o0g4kFvXs6JN03Qt4DkzqaJG4MRhQKy3d278222QptnsJwn3NuUiR8Y6XfyAkTQEmJ1jf2rSC7SkJsPLZeyU9KP_ZC8OMttVliJDXYgo2FFRTKKqPTeBM2ALd7MTSCoNU_mALPB63yqinpUirWoCMi_9q1Xsz4MeYeYOWDvyrcT5m1LiSEL4QyHf4jMB9_e7yFE5hjvySEt7QGlNGIopeFZ5kbAt6SpcmuwqF99C3ZV-MzD-u19_l4TxZx3VWeolyZBkhLU_5yJ18zvtaI-PmmHJVnu3CLcPTEcQcjSpvIAEEcxbXRagXn8R1IWXWr1p0Gyx0XuB1hwThZ0N_OhbATMCDdlFoH60TsFywRUy4s9Q8koaY42EtdP2K9DAU_aSNQ4vCebrwVTGvhjB35sLqPvwFQM25Qz014SGvox4K9OubYMnO1DahBN5h3-fHrnFqc5SHcHe7omMUCal6g_aDcD591CZHMKeICeTRXBKeZ994C7UOE98Twc0XSUGMA14-lgx9XhJregffVxhgYrclhZCivjQArOkKdmik4Wh7Km8L_NX4cDFSI8w7fe-T4p5AxKSrjazLJIETOAMvuXKRUdgNqOIOO5ITt3R_FPzT8WpNjs8NXM13A"
-dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+# Variáveis de ambiente ou diretamente no código (RECOMENDADO: use env no Render)
+APP_KEY = "62a0x76y9e50nk2"
+APP_SECRET = "4qshc24vqj8x0xq"
+REDIRECT_URI = "https://casamento-a0js.onrender.com/"  # Troque pelo domínio do Render depois
 
 app = Flask(__name__)
 app.secret_key = "segredo_seguro"
-
-# Pasta local (opcional)
 app.config['UPLOAD_FOLDER'] = "static/uploads"
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# Salva refresh_token permanentemente (aqui só para exemplo; prefira salvar em banco/variável segura)
+REFRESH_TOKEN_PATH = "refresh_token.txt"
+
+def get_dropbox_access_token():
+    """Troca refresh_token por access_token válido."""
+    if not os.path.exists(REFRESH_TOKEN_PATH):
+        raise Exception("Refresh token não encontrado. Acesse /auth primeiro.")
+
+    with open(REFRESH_TOKEN_PATH) as f:
+        refresh_token = f.read().strip()
+
+    response = requests.post("https://api.dropbox.com/oauth2/token", data={
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+        "client_id": APP_KEY,
+        "client_secret": APP_SECRET,
+    })
+
+    if response.status_code == 200:
+        return response.json()["access_token"]
+    else:
+        raise Exception(f"Erro ao renovar token: {response.text}")
+
+def get_dropbox_client():
+    access_token = get_dropbox_access_token()
+    return dropbox.Dropbox(access_token)
+
+@app.route("/auth")
+def auth():
+    """Inicia autenticação Dropbox."""
+    auth_url = f"https://www.dropbox.com/oauth2/authorize?client_id={APP_KEY}&response_type=code&redirect_uri={REDIRECT_URI}&token_access_type=offline"
+    return redirect(auth_url)
+
+@app.route("/oauth_callback")
+def oauth_callback():
+    """Recebe código do Dropbox e troca por refresh_token."""
+    code = request.args.get("code")
+    if not code:
+        return "Erro: Código não fornecido"
+
+    response = requests.post("https://api.dropbox.com/oauth2/token", data={
+        "code": code,
+        "grant_type": "authorization_code",
+        "client_id": APP_KEY,
+        "client_secret": APP_SECRET,
+        "redirect_uri": REDIRECT_URI
+    })
+
+    if response.status_code == 200:
+        data = response.json()
+        refresh_token = data.get("refresh_token")
+        with open(REFRESH_TOKEN_PATH, "w") as f:
+            f.write(refresh_token)
+        return "Autorizado com sucesso! Pode voltar ao sistema principal."
+    else:
+        return f"Erro ao autorizar: {response.text}"
+
 @app.route("/", methods=["GET", "POST"])
 def index():
+    dbx = get_dropbox_client()
+
     if request.method == "POST":
-        # Upload imagem tradicional
         if 'imagem' in request.files and request.files['imagem'].filename != '':
             imagem = request.files['imagem']
             nome_arquivo = secure_filename(imagem.filename)
@@ -29,7 +86,6 @@ def index():
             flash("Imagem enviada com sucesso!")
             return redirect("/")
 
-        # Upload foto via câmera
         if 'captured_image' in request.form:
             data_url = request.form['captured_image']
             if data_url.startswith("data:image"):
@@ -41,7 +97,6 @@ def index():
                 flash("Foto tirada e enviada com sucesso!")
                 return redirect("/")
 
-        # ✅ Upload vídeo via câmera (correto agora)
         if 'video_blob' in request.files:
             video = request.files['video_blob']
             nome = datetime.now().strftime("video_%Y%m%d_%H%M%S.webm")
@@ -54,6 +109,7 @@ def index():
 
 @app.route('/album')
 def album():
+    dbx = get_dropbox_client()
     folder_path = '/Uploads'
     arquivos = []
 
@@ -75,7 +131,6 @@ def album():
         print("Erro ao acessar Dropbox:", e)
 
     return render_template('album.html', arquivos=arquivos)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
