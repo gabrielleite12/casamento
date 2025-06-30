@@ -17,10 +17,11 @@ app.secret_key = "segredo_seguro"
 app.config['UPLOAD_FOLDER'] = "static/uploads"
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        # 📁 Upload tradicional de imagem da galeria
+        # 📁 Upload tradicional da galeria
         if 'imagem' in request.files and request.files['imagem'].filename != '':
             imagem = request.files['imagem']
             nome_arquivo = secure_filename(imagem.filename)
@@ -30,7 +31,7 @@ def index():
             return redirect("/")
 
         # 📷 Upload via câmera - Foto
-        if 'captured_image' in request.form:
+        if 'captured_image' in request.form and request.form['captured_image']:
             data_url = request.form['captured_image']
             if data_url.startswith("data:image"):
                 header, encoded = data_url.split(",", 1)
@@ -42,7 +43,7 @@ def index():
                 return redirect("/")
 
         # 🎥 Upload via câmera - Vídeo
-        if 'captured_video' in request.form:
+        if 'captured_video' in request.form and request.form['captured_video']:
             data_url = request.form['captured_video']
             if data_url.startswith("data:video"):
                 header, encoded = data_url.split(",", 1)
