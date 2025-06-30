@@ -7,175 +7,223 @@
     * {
       box-sizing: border-box;
     }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #fff0f5, #e6e6fa);
+
+    body, html {
       margin: 0;
       padding: 0;
-      color: #333;
-      text-align: center;
+      height: 100%;
+      background-color: black;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
     }
-    form {
-      margin: 20px auto;
-      max-width: 400px;
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+
+    #camera-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: black;
     }
-    input[type="file"] {
-      margin-top: 10px;
-      display: block;
+
+    video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #controls {
+      position: absolute;
+      bottom: 20px;
       width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
     }
+
+    #top-controls {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 20px;
+    }
+
     button {
-      padding: 10px 20px;
-      background-color: #ab47bc;
+      padding: 12px 20px;
       border: none;
       border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.2);
       color: white;
       font-weight: bold;
-      margin: 10px 5px;
       cursor: pointer;
       transition: background 0.3s;
     }
+
     button:hover {
-      background-color: #8e24aa;
+      background-color: rgba(255, 255, 255, 0.4);
     }
-    video, canvas, img {
-      width: 100%;
-      max-width: 360px;
-      margin-top: 10px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+
+    canvas, video.preview-video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: black;
     }
-    #camera-container, #preview-container {
+
+    #preview-container {
       display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85);
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      z-index: 1000;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: black;
+      z-index: 10;
     }
-    #camera-container video, #preview-container video, #preview-container canvas {
-      max-height: 70vh;
+
+    #preview-controls {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
     }
   </style>
 </head>
 <body>
-  <h2>Enviar imagem para Dropbox</h2>
-
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <ul>
-        {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
-
-  <form method="post" enctype="multipart/form-data" id="upload-form">
-    <label>
-      📁 Selecionar da galeria:
-      <input type="file" name="imagem" accept="image/*">
-    </label>
-  </form>
-
-  <button onclick="abrirCamera()">📷 Acessar Câmera</button>
-
   <div id="camera-container">
     <video id="camera" autoplay muted></video>
-    <button id="capture">📸 Capturar / Gravar</button>
-    <button onclick="fecharCamera()">❌ Fechar</button>
+    <div id="top-controls">
+      <button id="switch-camera">🔄</button>
+    </div>
+    <div id="controls">
+      <button id="capture">📸</button>
+    </div>
   </div>
 
   <div id="preview-container">
-    <canvas id="preview"></canvas>
-    <form method="post" enctype="multipart/form-data" id="media-form">
-      <input type="hidden" name="captured_image" id="captured-image">
-      <input type="hidden" name="captured_video" id="captured-video">
-      <button type="submit">✅ Usar</button>
-      <button type="button" onclick="refazer()">🔁 Tirar outra</button>
-    </form>
+    <canvas id="preview-canvas"></canvas>
+    <video class="preview-video" id="preview-video" controls style="display:none;"></video>
+    <div id="preview-controls">
+      <form method="post" enctype="multipart/form-data" id="save-form">
+        <input type="hidden" name="captured_image" id="captured-image">
+        <input type="hidden" name="captured_video" id="captured-video">
+        <button type="submit">✅ Usar</button>
+      </form>
+      <button onclick="refazer()">🔁 Refazer</button>
+    </div>
   </div>
 
+  <audio id="shutter-sound" src="https://actions.google.com/sounds/v1/camera/camera_click.ogg"></audio>
+
   <script>
+    let stream;
+    let mediaRecorder;
+    let chunks = [];
+    let usingFrontCamera = false;
     const video = document.getElementById('camera');
-    const canvas = document.getElementById('preview');
+    const previewCanvas = document.getElementById('preview-canvas');
+    const previewContainer = document.getElementById('preview-container');
+    const previewVideo = document.getElementById('preview-video');
+    const shutterSound = document.getElementById('shutter-sound');
     const capturedImageInput = document.getElementById('captured-image');
     const capturedVideoInput = document.getElementById('captured-video');
-    const cameraContainer = document.getElementById('camera-container');
-    const previewContainer = document.getElementById('preview-container');
-    let mediaRecorder;
-    let recordedChunks = [];
-    let recording = false;
 
-    function abrirCamera() {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(stream => {
-          video.srcObject = stream;
-          cameraContainer.style.display = 'flex';
-        })
-        .catch(err => alert("Erro ao acessar câmera: " + err.message));
-    }
-
-    function fecharCamera() {
-      if (video.srcObject) {
-        video.srcObject.getTracks().forEach(track => track.stop());
+    async function startCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
       }
-      cameraContainer.style.display = 'none';
+      const constraints = {
+        video: {
+          facingMode: usingFrontCamera ? "user" : "environment"
+        },
+        audio: true
+      };
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
+      } catch (err) {
+        alert("Erro ao acessar a câmera: " + err.message);
+      }
     }
 
-    document.getElementById('capture').addEventListener('mousedown', () => {
-      recordedChunks = [];
-      mediaRecorder = new MediaRecorder(video.srcObject);
-      mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+    document.getElementById('switch-camera').onclick = () => {
+      usingFrontCamera = !usingFrontCamera;
+      startCamera();
+    };
+
+    startCamera();
+
+    let pressTimer;
+    const captureBtn = document.getElementById('capture');
+    captureBtn.addEventListener('mousedown', () => {
+      pressTimer = setTimeout(startRecording, 500);
+    });
+
+    captureBtn.addEventListener('mouseup', () => {
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        stopRecording();
+      } else {
+        clearTimeout(pressTimer);
+        takePhoto();
+      }
+    });
+
+    function takePhoto() {
+      shutterSound.play();
+      const context = previewCanvas.getContext('2d');
+      previewCanvas.width = video.videoWidth;
+      previewCanvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
+      const dataUrl = previewCanvas.toDataURL('image/jpeg');
+      capturedImageInput.value = dataUrl;
+      previewCanvas.style.display = 'block';
+      previewVideo.style.display = 'none';
+      previewContainer.style.display = 'block';
+    }
+
+    function startRecording() {
+      chunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e => chunks.push(e.data);
       mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const videoURL = URL.createObjectURL(blob);
+        previewVideo.src = videoURL;
+        previewVideo.style.display = 'block';
+        previewCanvas.style.display = 'none';
+        previewContainer.style.display = 'block';
+
         const reader = new FileReader();
-        reader.onloadend = () => {
-          capturedVideoInput.value = reader.result;
-          canvas.style.display = 'none';
-          previewContainer.style.display = 'flex';
-        };
+        reader.onloadend = () => capturedVideoInput.value = reader.result;
         reader.readAsDataURL(blob);
       };
       mediaRecorder.start();
-      recording = true;
       setTimeout(() => {
-        if (recording) {
-          mediaRecorder.stop();
-          fecharCamera();
+        if (mediaRecorder.state === 'recording') {
+          stopRecording();
         }
       }, 5000);
-    });
+    }
 
-    document.getElementById('capture').addEventListener('mouseup', () => {
-      if (recording) {
-        mediaRecorder.stop();
-        fecharCamera();
-        recording = false;
-      }
-    });
-
-    document.getElementById('capture').addEventListener('click', () => {
-      if (!recording) {
-        const context = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0);
-        capturedImageInput.value = canvas.toDataURL('image/jpeg');
-        capturedVideoInput.value = '';
-        previewContainer.style.display = 'flex';
-        fecharCamera();
-      }
-    });
+    function stopRecording() {
+      mediaRecorder.stop();
+    }
 
     function refazer() {
       previewContainer.style.display = 'none';
+      previewCanvas.style.display = 'none';
+      previewVideo.style.display = 'none';
       capturedImageInput.value = '';
       capturedVideoInput.value = '';
     }
