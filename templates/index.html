@@ -113,6 +113,37 @@
         flex-direction: column;
       }
     }
+    #capture {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #ab47bc;
+  border: none;
+  box-shadow: 0 4px 8px rgba(171, 71, 188, 0.6);
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+  transition: background-color 0.3s;
+}
+
+#capture::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  width: 24px;
+  height: 18px;
+  border-radius: 4px;
+  background: white;
+  box-shadow:
+    0 -6px 0 white inset,
+    24px 0 0 white inset;
+}
+
+#capture:hover {
+  background-color: #8e24aa;
+}
+
   </style>
 </head>
 <body>
@@ -140,7 +171,7 @@
 
   <video id="camera" autoplay></video>
   <div class="overlay-buttons" id="botoesCamera" style="display: none;">
-    <button id="capture">📸 Capturar</button>
+    <button id="capture" aria-label="Capturar foto ou gravar vídeo"></button>
   </div>
 
   <!-- Tela de pré-visualização -->
@@ -155,100 +186,55 @@
     </div>
   </div>
 
-<script>
-  const abrirCameraBtn = document.getElementById('abrirCamera');
-  const video = document.getElementById('camera');
-  const botoesCamera = document.getElementById('botoesCamera');
-  const previewFullscreen = document.getElementById('preview-fullscreen');
-  const previewImg = document.getElementById('preview-img');
-  const capturedImageInput = document.getElementById('captured-image');
-  const captureBtn = document.getElementById('capture');
+  <script>
+    const abrirCameraBtn = document.getElementById('abrirCamera');
+    const video = document.getElementById('camera');
+    const botoesCamera = document.getElementById('botoesCamera');
+    const previewFullscreen = document.getElementById('preview-fullscreen');
+    const previewImg = document.getElementById('preview-img');
+    const capturedImageInput = document.getElementById('captured-image');
+    let stream = null;
 
-  let stream = null;
-  let mediaRecorder = null;
-  let videoChunks = [];
-  let isRecording = false;
-  let holdTimer = null;
+    abrirCameraBtn.addEventListener('click', () => {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+        .then(s => {
+          stream = s;
+          video.srcObject = stream;
+          video.style.display = 'block';
+          botoesCamera.style.display = 'flex';
+          abrirCameraBtn.style.display = 'none';
+        })
+        .catch(err => {
+          alert("Erro ao acessar a câmera: " + err.message);
+        });
+    });
 
-  abrirCameraBtn.addEventListener('click', () => {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true })
-      .then(s => {
-        stream = s;
-        video.srcObject = stream;
-        video.style.display = 'block';
-        botoesCamera.style.display = 'flex';
-        abrirCameraBtn.style.display = 'none';
-      })
-      .catch(err => {
-        alert("Erro ao acessar a câmera: " + err.message);
-      });
-  });
+    document.getElementById('capture').addEventListener('click', () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  captureBtn.addEventListener('click', () => {
-    if (!isRecording) capturarFoto();
-  });
+      const dataURL = canvas.toDataURL('image/jpeg');
+      capturedImageInput.value = dataURL;
+      previewImg.src = dataURL;
 
-  captureBtn.addEventListener('mousedown', () => {
-    holdTimer = setTimeout(() => {
-      iniciarGravacao();
-    }, 400); // se segurar por mais de 400ms, grava
-  });
-
-  captureBtn.addEventListener('mouseup', () => {
-    clearTimeout(holdTimer);
-    if (isRecording) pararGravacao();
-  });
-
-  function capturarFoto() {
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const dataURL = canvas.toDataURL('image/jpeg');
-    capturedImageInput.value = dataURL;
-    previewImg.src = dataURL;
-
-    video.pause();
-    stream.getTracks().forEach(track => track.stop());
-    video.style.display = 'none';
-    botoesCamera.style.display = 'none';
-    previewFullscreen.style.display = 'flex';
-  }
-
-  function iniciarGravacao() {
-    isRecording = true;
-    videoChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = e => videoChunks.push(e.data);
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(videoChunks, { type: 'video/webm' });
-      const url = URL.createObjectURL(blob);
-      previewImg.src = url;
-      capturedImageInput.value = ''; // Não envia vídeo pelo formulário HTML, apenas preview
-
-      // Stop video feed
+      // Parar câmera
       video.pause();
       stream.getTracks().forEach(track => track.stop());
       video.style.display = 'none';
       botoesCamera.style.display = 'none';
+
+      // Mostrar preview
       previewFullscreen.style.display = 'flex';
-    };
-    mediaRecorder.start();
-  }
+    });
 
-  function pararGravacao() {
-    isRecording = false;
-    mediaRecorder.stop();
-  }
-
-  function refazer() {
-    previewFullscreen.style.display = 'none';
-    capturedImageInput.value = '';
-    abrirCameraBtn.style.display = 'inline-block';
-  }
-</script>
-
+    function refazer() {
+      previewFullscreen.style.display = 'none';
+      capturedImageInput.value = '';
+      abrirCameraBtn.style.display = 'inline-block';
+    }
+  </script>
 </body>
-</html>
+</html> assim que ira ficar ? 
