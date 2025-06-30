@@ -220,7 +220,6 @@
   const previewImg = document.getElementById('preview-img');
   const previewVideo = document.getElementById('preview-video');
   const capturedImageInput = document.getElementById('captured-image');
-  const capturedVideoInput = document.getElementById('captured-video');
   const captureBtn = document.getElementById('capture');
 
   let stream = null;
@@ -228,6 +227,7 @@
   let videoChunks = [];
   let isRecording = false;
   let holdTimer = null;
+  let videoBlob = null;
 
   abrirCameraBtn.addEventListener('click', () => {
     navigator.mediaDevices
@@ -244,12 +244,10 @@
       });
   });
 
-  // Clique rápido tira foto
   captureBtn.addEventListener('click', () => {
     if (!isRecording) capturarFoto();
   });
 
-  // Pressionar e segurar inicia gravação
   captureBtn.addEventListener('mousedown', () => {
     holdTimer = setTimeout(() => {
       iniciarGravacao();
@@ -266,7 +264,6 @@
     clearTimeout(holdTimer);
   });
 
-  // Toque em mobile
   captureBtn.addEventListener('touchstart', (e) => {
     e.preventDefault();
     holdTimer = setTimeout(() => {
@@ -295,20 +292,15 @@
 
     const dataURL = canvas.toDataURL('image/jpeg');
     capturedImageInput.value = dataURL;
-    capturedVideoInput.value = '';
     previewImg.src = dataURL;
 
-    // Mostrar imagem, esconder vídeo
     previewImg.style.display = 'block';
     previewVideo.style.display = 'none';
 
-    // Parar câmera
     video.pause();
     stream.getTracks().forEach((track) => track.stop());
     video.style.display = 'none';
     botoesCamera.style.display = 'none';
-
-    // Mostrar preview
     previewFullscreen.style.display = 'flex';
   }
 
@@ -319,30 +311,21 @@
     mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.ondataavailable = (e) => videoChunks.push(e.data);
     mediaRecorder.onstop = () => {
-      const blob = new Blob(videoChunks, { type: 'video/webm' });
-      const url = URL.createObjectURL(blob);
-
-      previewImg.style.display = 'none';
-      previewVideo.style.display = 'block';
+      videoBlob = new Blob(videoChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(videoBlob);
       previewVideo.src = url;
-      previewVideo.load();
+      previewVideo.style.display = 'block';
+      previewImg.style.display = 'none';
 
-      // Converte para base64 e envia
-      const reader = new FileReader();
-      reader.onloadend = function () {
-        capturedVideoInput.value = reader.result;
-        capturedImageInput.value = '';
-      };
-      reader.readAsDataURL(blob);
-
-      // Parar câmera
       video.pause();
       stream.getTracks().forEach((track) => track.stop());
       video.style.display = 'none';
       botoesCamera.style.display = 'none';
-
       previewFullscreen.style.display = 'flex';
       captureBtn.classList.remove('recording');
+
+      // Adiciona botão para enviar vídeo
+      adicionarBotaoVideo();
     };
     mediaRecorder.start();
     captureBtn.classList.add('recording');
@@ -356,15 +339,51 @@
 
   function refazer() {
     previewFullscreen.style.display = 'none';
-    capturedImageInput.value = '';
-    capturedVideoInput.value = '';
     previewImg.src = '';
     previewVideo.src = '';
-    previewVideo.style.display = 'none';
     previewImg.style.display = 'none';
+    previewVideo.style.display = 'none';
+    capturedImageInput.value = '';
+    videoBlob = null;
     abrirCameraBtn.style.display = 'inline-block';
+
+    // Remove botão de vídeo se existir
+    const botaoVideo = document.getElementById('enviar-video-btn');
+    if (botaoVideo) botaoVideo.remove();
+  }
+
+  function adicionarBotaoVideo() {
+    const formContainer = document.querySelector('#preview-fullscreen .overlay-buttons form');
+    if (document.getElementById('enviar-video-btn')) return;
+
+    const botao = document.createElement('button');
+    botao.id = 'enviar-video-btn';
+    botao.textContent = '✅ Usar este vídeo';
+    botao.type = 'button';
+    botao.onclick = () => {
+      const formData = new FormData();
+      formData.append('video_blob', videoBlob, 'video.webm');
+
+      fetch('/', {
+        method: 'POST',
+        body: formData
+      })
+        .then(res => {
+          if (res.redirected) {
+            window.location.href = res.url;
+          } else {
+            alert("Vídeo enviado, mas sem redirecionamento.");
+          }
+        })
+        .catch(err => {
+          alert('Erro ao enviar vídeo: ' + err.message);
+        });
+    };
+
+    formContainer.appendChild(botao);
   }
 </script>
+
 
 </body>
 </html>
