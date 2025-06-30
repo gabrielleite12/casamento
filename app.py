@@ -17,7 +17,6 @@ app.secret_key = "segredo_seguro"
 app.config['UPLOAD_FOLDER'] = "static/uploads"
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
@@ -42,14 +41,14 @@ def index():
                 flash("Foto tirada e enviada com sucesso!")
                 return redirect("/")
 
-        # Upload vídeo via câmera (novo)
-       if 'video_blob' in request.files:
-    video = request.files['video_blob']
-    nome = datetime.now().strftime("video_%Y%m%d_%H%M%S.webm")
-    caminho_dropbox = f"/uploads/{nome}"
-    dbx.files_upload(video.read(), caminho_dropbox)
-    flash("Vídeo gravado e enviado com sucesso!")
-    return redirect("/")
+        # ✅ Upload vídeo via câmera (correto agora)
+        if 'video_blob' in request.files:
+            video = request.files['video_blob']
+            nome = datetime.now().strftime("video_%Y%m%d_%H%M%S.webm")
+            caminho_dropbox = f"/uploads/{nome}"
+            dbx.files_upload(video.read(), caminho_dropbox)
+            flash("Vídeo gravado e enviado com sucesso!")
+            return redirect("/")
 
     return render_template("index.html")
 
