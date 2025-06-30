@@ -92,6 +92,17 @@
       border: none;
     }
 
+    #capture.recording {
+      background-color: red;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+      70% { box-shadow: 0 0 0 15px rgba(255, 0, 0, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+    }
+
     #preview-fullscreen {
       position: fixed;
       top: 0;
@@ -107,19 +118,18 @@
       padding: 1rem;
     }
 
-  #preview-img,
-  #preview-video {
-    max-width: 90vw;
-    max-height: 70vh; /* Reduzido para dar espaço aos botões */
-    border-radius: 20px;
-    box-shadow:
-      0 6px 20px rgba(109, 33, 119, 0.7),
-      inset 0 0 30px rgba(255, 255, 255, 0.3);
-    user-select: none;
-    background-color: black;
-    margin-bottom: 1rem; /* espaço entre vídeo/foto e botões */
-  }
-
+    #preview-img,
+    #preview-video {
+      max-width: 90vw;
+      max-height: 70vh;
+      border-radius: 20px;
+      box-shadow:
+        0 6px 20px rgba(109, 33, 119, 0.7),
+        inset 0 0 30px rgba(255, 255, 255, 0.3);
+      user-select: none;
+      background-color: black;
+      margin-bottom: 1rem;
+    }
 
     #preview-buttons {
       margin-top: 1.5rem;
@@ -187,17 +197,41 @@
         .catch(err => alert('Erro ao acessar a câmera: ' + err.message));
     };
 
-    captureBtn.onclick = () => {
-      if (!isRecording) capturarFoto();
-    };
+    captureBtn.addEventListener('mousedown', () => {
+      holdTimer = setTimeout(() => {
+        iniciarGravacao();
+      }, 400);
+    });
 
-    captureBtn.onmousedown = () => {
-      holdTimer = setTimeout(() => iniciarGravacao(), 400);
-    };
-    captureBtn.onmouseup = captureBtn.onmouseleave = () => {
+    captureBtn.addEventListener('mouseup', () => {
       clearTimeout(holdTimer);
       if (isRecording) pararGravacao();
-    };
+    });
+
+    captureBtn.addEventListener('mouseleave', () => {
+      clearTimeout(holdTimer);
+      if (isRecording) pararGravacao();
+    });
+
+    captureBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      holdTimer = setTimeout(() => {
+        iniciarGravacao();
+      }, 400);
+    });
+
+    captureBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      clearTimeout(holdTimer);
+      if (isRecording) pararGravacao();
+      else capturarFoto();
+    });
+
+    captureBtn.addEventListener('touchcancel', (e) => {
+      e.preventDefault();
+      clearTimeout(holdTimer);
+      if (isRecording) pararGravacao();
+    });
 
     function capturarFoto() {
       const canvas = document.createElement('canvas');
@@ -215,6 +249,7 @@
     function iniciarGravacao() {
       if (isRecording) return;
       isRecording = true;
+      captureBtn.classList.add('recording');
       videoChunks = [];
       mediaRecorder = new MediaRecorder(stream);
       mediaRecorder.ondataavailable = e => videoChunks.push(e.data);
@@ -224,6 +259,7 @@
         previewVideo.src = url;
         previewVideo.style.display = 'block';
         previewImg.style.display = 'none';
+        captureBtn.classList.remove('recording');
         adicionarBotaoVideo();
         finalizarCamera();
       };
@@ -255,6 +291,7 @@
       abrirCameraBtn.style.display = 'inline-block';
       const botaoVideo = document.getElementById('enviar-video-btn');
       if (botaoVideo) botaoVideo.remove();
+      document.getElementById('botao-usar-imagem').style.display = 'inline-block';
     }
 
     function adicionarBotaoVideo() {
