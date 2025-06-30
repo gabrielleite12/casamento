@@ -138,10 +138,28 @@
       justify-content: center;
       flex-wrap: nowrap;
     }
+
+    /* Novos botões no topo */
+    .top-button {
+      position: fixed;
+      top: 20px;
+      z-index: 1002;
+      padding: 10px 14px;
+      font-size: 1.3rem;
+      background-color: rgba(255, 255, 255, 0.8);
+      border: 2px solid #6a1b9a;
+      color: #6a1b9a;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #trocarCamera { left: 20px; display: none; }
+    #fecharCamera { right: 20px; display: none; }
+
   </style>
 </head>
 <body>
-  <h2>Cabine de Fotos do Casamento</h2>
+  <h2>💍 Cabine de Fotos do Casamento</h2>
 
   <form method="post" enctype="multipart/form-data">
     <label>
@@ -155,6 +173,9 @@
   <button id="abrirCamera">Abrir câmera</button>
 
   <video id="camera" autoplay muted playsinline></video>
+  <button id="trocarCamera" class="top-button">🔁</button>
+  <button id="fecharCamera" class="top-button">❌</button>
+
   <div class="overlay-buttons" id="botoesCamera">
     <button id="capture"></button>
   </div>
@@ -176,6 +197,8 @@
     const abrirCameraBtn = document.getElementById('abrirCamera');
     const video = document.getElementById('camera');
     const botoesCamera = document.getElementById('botoesCamera');
+    const trocarCameraBtn = document.getElementById('trocarCamera');
+    const fecharCameraBtn = document.getElementById('fecharCamera');
     const previewFullscreen = document.getElementById('preview-fullscreen');
     const previewImg = document.getElementById('preview-img');
     const previewVideo = document.getElementById('preview-video');
@@ -184,23 +207,41 @@
     const previewButtons = document.getElementById('preview-buttons');
 
     let stream, mediaRecorder, videoChunks = [], isRecording = false, holdTimer = null, videoBlob = null;
+    let currentFacingMode = 'user'; // frontal
 
-    abrirCameraBtn.onclick = () => {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    abrirCameraBtn.onclick = () => iniciarCamera(currentFacingMode);
+
+    function iniciarCamera(facingMode) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: true })
         .then(s => {
           stream = s;
           video.srcObject = stream;
           video.style.display = 'block';
           botoesCamera.style.display = 'flex';
           abrirCameraBtn.style.display = 'none';
+          trocarCameraBtn.style.display = 'block';
+          fecharCameraBtn.style.display = 'block';
         })
         .catch(err => alert('Erro ao acessar a câmera: ' + err.message));
+    }
+
+    trocarCameraBtn.onclick = () => {
+      currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+      if (stream) stream.getTracks().forEach(track => track.stop());
+      iniciarCamera(currentFacingMode);
+    };
+
+    fecharCameraBtn.onclick = () => {
+      if (stream) stream.getTracks().forEach(track => track.stop());
+      video.style.display = 'none';
+      botoesCamera.style.display = 'none';
+      trocarCameraBtn.style.display = 'none';
+      fecharCameraBtn.style.display = 'none';
+      abrirCameraBtn.style.display = 'inline-block';
     };
 
     captureBtn.addEventListener('mousedown', () => {
-      holdTimer = setTimeout(() => {
-        iniciarGravacao();
-      }, 400);
+      holdTimer = setTimeout(() => iniciarGravacao(), 400);
     });
 
     captureBtn.addEventListener('mouseup', () => {
@@ -215,9 +256,7 @@
 
     captureBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      holdTimer = setTimeout(() => {
-        iniciarGravacao();
-      }, 400);
+      holdTimer = setTimeout(() => iniciarGravacao(), 400);
     });
 
     captureBtn.addEventListener('touchend', (e) => {
@@ -274,9 +313,11 @@
 
     function finalizarCamera() {
       video.pause();
-      stream.getTracks().forEach(track => track.stop());
+      if (stream) stream.getTracks().forEach(track => track.stop());
       video.style.display = 'none';
       botoesCamera.style.display = 'none';
+      trocarCameraBtn.style.display = 'none';
+      fecharCameraBtn.style.display = 'none';
       previewFullscreen.style.display = 'flex';
     }
 
