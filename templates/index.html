@@ -194,100 +194,146 @@
     <button id="capture" aria-label="Capturar foto ou gravar vídeo"></button>
   </div>
 
-  <!-- Tela de pré-visualização -->
-  <div id="preview-fullscreen">
-    <img id="preview-img" src="" />
-    <div class="overlay-buttons">
-      <form method="post" enctype="multipart/form-data" id="photo-form">
-        <input type="hidden" name="captured_image" id="captured-image" />
-        <button type="submit">✅ Usar esta foto</button>
-        <button type="button" onclick="refazer()">🔁 Tirar outra</button>
-      </form>
-    </div>
+<!-- Tela de pré-visualização -->
+<div id="preview-fullscreen">
+  <img id="preview-img" src="" />
+  <div class="overlay-buttons">
+    <form method="post" enctype="multipart/form-data" id="photo-form">
+      <input type="hidden" name="captured_image" id="captured-image" />
+      <input type="hidden" name="captured_video" id="captured-video" />
+      <button type="submit">✅ Usar esta imagem ou vídeo</button>
+      <button type="button" onclick="refazer()">🔁 Tirar outra</button>
+    </form>
+  </div>
+  <video id="preview-video" controls style="max-width: 100%; max-height: 100vh; display: none;"></video>
+</div>
   </div>
 
-  <script>
-    const abrirCameraBtn = document.getElementById('abrirCamera');
-    const video = document.getElementById('camera');
-    const botoesCamera = document.getElementById('botoesCamera');
-    const previewFullscreen = document.getElementById('preview-fullscreen');
-    const previewImg = document.getElementById('preview-img');
-    const capturedImageInput = document.getElementById('captured-image');
-    const captureBtn = document.getElementById('capture');
+<!-- ... cabeçalho intacto ... -->
+<!-- Substitua somente a parte abaixo do seu <script> -->
 
-    let stream = null;
-    let mediaRecorder = null;
-    let videoChunks = [];
-    let isRecording = false;
-    let holdTimer = null;
+<script>
+  const abrirCameraBtn = document.getElementById('abrirCamera');
+  const video = document.getElementById('camera');
+  const botoesCamera = document.getElementById('botoesCamera');
+  const previewFullscreen = document.getElementById('preview-fullscreen');
+  const previewImg = document.getElementById('preview-img');
+  const previewVideo = document.getElementById('preview-video');
+  const capturedImageInput = document.getElementById('captured-image');
+  const capturedVideoInput = document.getElementById('captured-video');
+  const captureBtn = document.getElementById('capture');
 
-    abrirCameraBtn.addEventListener('click', () => {
-      navigator.mediaDevices
-        .getUserMedia({ video: { facingMode: 'environment' }, audio: true })
-        .then((s) => {
-          stream = s;
-          video.srcObject = stream;
-          video.style.display = 'block';
-          botoesCamera.style.display = 'flex';
-          abrirCameraBtn.style.display = 'none';
-        })
-        .catch((err) => {
-          alert('Erro ao acessar a câmera: ' + err.message);
-        });
-    });
+  let stream = null;
+  let mediaRecorder = null;
+  let videoChunks = [];
+  let isRecording = false;
+  let holdTimer = null;
 
-    // Clique rápido tira foto
-    captureBtn.addEventListener('click', () => {
-      if (!isRecording) capturarFoto();
-    });
+  abrirCameraBtn.addEventListener('click', () => {
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: 'environment' }, audio: true })
+      .then((s) => {
+        stream = s;
+        video.srcObject = stream;
+        video.style.display = 'block';
+        botoesCamera.style.display = 'flex';
+        abrirCameraBtn.style.display = 'none';
+      })
+      .catch((err) => {
+        alert('Erro ao acessar a câmera: ' + err.message);
+      });
+  });
 
-    // Pressionar e segurar inicia gravação
-    captureBtn.addEventListener('mousedown', () => {
-      holdTimer = setTimeout(() => {
-        iniciarGravacao();
-      }, 400); // Pressionar por mais de 400ms inicia gravação
-    });
+  // Clique rápido tira foto
+  captureBtn.addEventListener('click', () => {
+    if (!isRecording) capturarFoto();
+  });
 
-    captureBtn.addEventListener('mouseup', () => {
-      clearTimeout(holdTimer);
-      if (isRecording) pararGravacao();
-    });
+  // Pressionar e segurar inicia gravação
+  captureBtn.addEventListener('mousedown', () => {
+    holdTimer = setTimeout(() => {
+      iniciarGravacao();
+    }, 400);
+  });
 
-    captureBtn.addEventListener('mouseleave', () => {
-      if (isRecording) pararGravacao();
-      clearTimeout(holdTimer);
-    });
+  captureBtn.addEventListener('mouseup', () => {
+    clearTimeout(holdTimer);
+    if (isRecording) pararGravacao();
+  });
 
-    // Suporte a toque para mobile
-    captureBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      holdTimer = setTimeout(() => {
-        iniciarGravacao();
-      }, 400);
-    });
+  captureBtn.addEventListener('mouseleave', () => {
+    if (isRecording) pararGravacao();
+    clearTimeout(holdTimer);
+  });
 
-    captureBtn.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      clearTimeout(holdTimer);
-      if (isRecording) pararGravacao();
-      else capturarFoto();
-    });
+  // Toque em mobile
+  captureBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    holdTimer = setTimeout(() => {
+      iniciarGravacao();
+    }, 400);
+  });
 
-    captureBtn.addEventListener('touchcancel', (e) => {
-      if (isRecording) pararGravacao();
-      clearTimeout(holdTimer);
-    });
+  captureBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    clearTimeout(holdTimer);
+    if (isRecording) pararGravacao();
+    else capturarFoto();
+  });
 
-    function capturarFoto() {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const context = canvas.getContext('2d');
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  captureBtn.addEventListener('touchcancel', (e) => {
+    if (isRecording) pararGravacao();
+    clearTimeout(holdTimer);
+  });
 
-      const dataURL = canvas.toDataURL('image/jpeg');
-      capturedImageInput.value = dataURL;
-      previewImg.src = dataURL;
+  function capturarFoto() {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const dataURL = canvas.toDataURL('image/jpeg');
+    capturedImageInput.value = dataURL;
+    capturedVideoInput.value = '';
+    previewImg.src = dataURL;
+
+    // Mostrar imagem, esconder vídeo
+    previewImg.style.display = 'block';
+    previewVideo.style.display = 'none';
+
+    // Parar câmera
+    video.pause();
+    stream.getTracks().forEach((track) => track.stop());
+    video.style.display = 'none';
+    botoesCamera.style.display = 'none';
+
+    // Mostrar preview
+    previewFullscreen.style.display = 'flex';
+  }
+
+  function iniciarGravacao() {
+    if (isRecording) return;
+    isRecording = true;
+    videoChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = (e) => videoChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(videoChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+
+      previewImg.style.display = 'none';
+      previewVideo.style.display = 'block';
+      previewVideo.src = url;
+      previewVideo.load();
+
+      // Converte para base64 e envia
+      const reader = new FileReader();
+      reader.onloadend = function () {
+        capturedVideoInput.value = reader.result;
+        capturedImageInput.value = '';
+      };
+      reader.readAsDataURL(blob);
 
       // Parar câmera
       video.pause();
@@ -295,51 +341,30 @@
       video.style.display = 'none';
       botoesCamera.style.display = 'none';
 
-      // Mostrar preview
       previewFullscreen.style.display = 'flex';
-    }
+      captureBtn.classList.remove('recording');
+    };
+    mediaRecorder.start();
+    captureBtn.classList.add('recording');
+  }
 
-    function iniciarGravacao() {
-      if (isRecording) return;
-      isRecording = true;
-      videoChunks = [];
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = (e) => videoChunks.push(e.data);
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(videoChunks, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        previewImg.src = url;
-        capturedImageInput.value = ''; // vídeo não é enviado
+  function pararGravacao() {
+    if (!isRecording) return;
+    isRecording = false;
+    mediaRecorder.stop();
+  }
 
-        // Parar câmera
-        video.pause();
-        stream.getTracks().forEach((track) => track.stop());
-        video.style.display = 'none';
-        botoesCamera.style.display = 'none';
+  function refazer() {
+    previewFullscreen.style.display = 'none';
+    capturedImageInput.value = '';
+    capturedVideoInput.value = '';
+    previewImg.src = '';
+    previewVideo.src = '';
+    previewVideo.style.display = 'none';
+    previewImg.style.display = 'none';
+    abrirCameraBtn.style.display = 'inline-block';
+  }
+</script>
 
-        // Mostrar preview
-        previewFullscreen.style.display = 'flex';
-
-        // Remove efeito gravação do botão
-        captureBtn.classList.remove('recording');
-      };
-      mediaRecorder.start();
-
-      // Adiciona efeito gravação no botão
-      captureBtn.classList.add('recording');
-    }
-
-    function pararGravacao() {
-      if (!isRecording) return;
-      isRecording = false;
-      mediaRecorder.stop();
-    }
-
-    function refazer() {
-      previewFullscreen.style.display = 'none';
-      capturedImageInput.value = '';
-      abrirCameraBtn.style.display = 'inline-block';
-    }
-  </script>
 </body>
 </html>
