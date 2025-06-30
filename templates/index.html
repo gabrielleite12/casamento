@@ -97,45 +97,7 @@
       left: 0;
       z-index: 999;
       display: none;
-      border-radius: 0;
       background: black;
-    }
-
-    #preview-fullscreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(25, 0, 40, 0.85);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      z-index: 1000;
-      padding: 1rem;
-    }
-
-    #preview-img,
-    #preview-video {
-      max-width: 90vw;
-      max-height: 80vh;
-      border-radius: 20px;
-      box-shadow:
-        0 6px 20px rgba(109, 33, 119, 0.7),
-        inset 0 0 30px rgba(255, 255, 255, 0.3);
-      user-select: none;
-      background-color: black;
-    }
-
-    .overlay-buttons {
-      margin-top: 1rem;
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      width: 100%;
-      max-width: 400px;
     }
 
     /* Botão abrir câmera */
@@ -170,7 +132,7 @@
       display: none;
       gap: 20px;
       justify-content: center;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
 
     /* Botão circular estilo câmera */
@@ -226,25 +188,62 @@
       box-shadow: 0 0 15px 6px rgba(229, 57, 53, 0.9);
     }
 
-    /* Botões de enviar e refazer na pré-visualização */
-    #preview-fullscreen form button {
-      flex: 1 1 140px;
+    /* Tela de pré-visualização */
+    #preview-fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(25, 0, 40, 0.95);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    #preview-img,
+    #preview-video {
+      max-width: 90vw;
+      max-height: 80vh;
+      border-radius: 20px;
+      box-shadow:
+        0 6px 20px rgba(109, 33, 119, 0.7),
+        inset 0 0 30px rgba(255, 255, 255, 0.3);
+      user-select: none;
+      background-color: black;
+    }
+
+    /* Container dos botões da pré-visualização */
+    #preview-buttons {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: nowrap;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    #preview-buttons button {
+      flex: 1;
       padding: 14px 0;
       border-radius: 12px;
       font-weight: 700;
       font-size: 1.1rem;
       user-select: none;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s, box-shadow 0.3s;
+      color: white;
+      box-shadow: 0 5px 12px rgba(156, 39, 176, 0.7);
     }
 
     #botao-usar-imagem {
       background-color: #7b1fa2;
-      color: white;
-      border: none;
-      box-shadow: 0 5px 12px rgba(123, 31, 162, 0.7);
-      transition: background-color 0.3s, box-shadow 0.3s;
-      cursor: pointer;
     }
-
     #botao-usar-imagem:hover,
     #botao-usar-imagem:focus {
       background-color: #4a148c;
@@ -254,18 +253,8 @@
 
     #enviar-video-btn {
       background-color: #d32f2f;
-      color: white;
-      border: none;
       box-shadow: 0 5px 14px rgba(211, 47, 47, 0.8);
-      transition: background-color 0.3s, box-shadow 0.3s;
-      cursor: pointer;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      padding: 14px 0;
-      user-select: none;
     }
-
     #enviar-video-btn:hover,
     #enviar-video-btn:focus {
       background-color: #9a1f1f;
@@ -273,22 +262,11 @@
       outline: none;
     }
 
-    #preview-fullscreen button[type="button"] {
+    #botao-refazer {
       background-color: #9c27b0;
-      color: white;
-      border: none;
-      box-shadow: 0 5px 12px rgba(156, 39, 176, 0.7);
-      transition: background-color 0.3s, box-shadow 0.3s;
-      cursor: pointer;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      padding: 14px 0;
-      user-select: none;
     }
-
-    #preview-fullscreen button[type="button"]:hover,
-    #preview-fullscreen button[type="button"]:focus {
+    #botao-refazer:hover,
+    #botao-refazer:focus {
       background-color: #7b1fa2;
       box-shadow: 0 6px 18px rgba(123, 31, 162, 0.9);
       outline: none;
@@ -305,12 +283,13 @@
         width: 90%;
       }
 
-      .overlay-buttons {
-        flex-direction: column;
+      #botoesCamera {
+        bottom: 20px;
       }
 
-      #botoesCamera {
-        bottom: 15px;
+      #preview-buttons {
+        flex-direction: column;
+        max-width: 90vw;
       }
     }
 
@@ -347,16 +326,19 @@
   </div>
 
   <!-- Tela de pré-visualização -->
-  <div id="preview-fullscreen">
+  <div id="preview-fullscreen" role="dialog" aria-modal="true" aria-label="Pré-visualização da foto ou vídeo">
     <img id="preview-img" src="" alt="Pré-visualização da foto" />
     <video id="preview-video" controls style="display: none;"></video>
 
-    <div class="overlay-buttons">
-      <form method="post" enctype="multipart/form-data" id="photo-form">
+    <div id="preview-buttons">
+      <form method="post" enctype="multipart/form-data" id="photo-form" style="flex: 1; display: flex; gap: 1rem;">
         <input type="hidden" name="captured_image" id="captured-image" />
+        <!-- Botão para usar imagem -->
         <button type="submit" id="botao-usar-imagem">✅ Usar esta imagem</button>
-        <button type="button" onclick="refazer()">🔁 Tirar outra</button>
+        <!-- Botão para usar vídeo (será adicionado dinamicamente) -->
       </form>
+      <!-- Botão para tirar outra foto/vídeo -->
+      <button id="botao-refazer" type="button" onclick="refazer()">🔁 Tirar outra</button>
     </div>
   </div>
 
@@ -369,6 +351,8 @@
     const previewVideo = document.getElementById('preview-video');
     const capturedImageInput = document.getElementById('captured-image');
     const captureBtn = document.getElementById('capture');
+    const photoForm = document.getElementById('photo-form');
+    const previewButtons = document.getElementById('preview-buttons');
 
     let stream = null;
     let mediaRecorder = null;
@@ -451,8 +435,10 @@
       botoesCamera.style.display = 'none';
       previewFullscreen.style.display = 'flex';
 
-      // Exibe botão usar imagem, esconde botão vídeo
+      // Mostrar botão "Usar esta imagem"
       document.getElementById('botao-usar-imagem').style.display = 'inline-block';
+
+      // Remover botão de vídeo se existir
       const botaoVideo = document.getElementById('enviar-video-btn');
       if (botaoVideo) botaoVideo.remove();
 
@@ -505,47 +491,39 @@
       const botaoVideo = document.getElementById('enviar-video-btn');
       if (botaoVideo) botaoVideo.remove();
 
-      // Garante que o botão usar imagem esteja visível para fotos
+      // Mostrar botão "Usar esta imagem"
       document.getElementById('botao-usar-imagem').style.display = 'inline-block';
     }
 
     function adicionarBotaoVideo() {
-      const formContainer = document.querySelector('#preview-fullscreen .overlay-buttons form');
-
-      // Oculta o botão de imagem
+      // Oculta o botão usar imagem
       document.getElementById('botao-usar-imagem').style.display = 'none';
 
-      // Remove botão anterior, se houver
-      const botaoExistente = document.getElementById('enviar-video-btn');
-      if (botaoExistente) botaoExistente.remove();
+      // Remove
+  const botao = document.createElement('button');
+  botao.id = 'enviar-video-btn';
+  botao.textContent = '✅ Usar este vídeo';
+  botao.type = 'button';
+  botao.onclick = () => {
+    const formData = new FormData();
+    formData.append('video_blob', videoBlob, 'video.webm');
 
-      const botao = document.createElement('button');
-      botao.id = 'enviar-video-btn';
-      botao.textContent = '✅ Usar este vídeo';
-      botao.type = 'button';
-      botao.onclick = () => {
-        const formData = new FormData();
-        formData.append('video_blob', videoBlob, 'video.webm');
+    fetch('/', {
+      method: 'POST',
+      body: formData
+    })
+      .then(res => {
+        if (res.redirected) {
+          window.location.href = res.url;
+        } else {
+          alert("Vídeo enviado, mas sem redirecionamento.");
+        }
+      })
+      .catch(err => {
+        alert('Erro ao enviar vídeo: ' + err.message);
+      });
+  };
 
-        fetch('/', {
-          method: 'POST',
-          body: formData
-        })
-          .then(res => {
-            if (res.redirected) {
-              window.location.href = res.url;
-            } else {
-              alert("Vídeo enviado, mas sem redirecionamento.");
-            }
-          })
-          .catch(err => {
-            alert('Erro ao enviar vídeo: ' + err.message);
-          });
-      };
-
-      // Insere antes do botão "Tirar outra"
-      formContainer.insertBefore(botao, formContainer.children[1]);
-    }
-  </script>
-</body>
-</html>
+  previewButtons.insertBefore(botao, document.getElementById('botao-refazer'));
+}
+</script> </body> </html>
