@@ -35,16 +35,7 @@
       background: #fff;
       padding: 25px 30px;
       border-radius: 20px;
-      box-shadow:
-        0 8px 24px rgba(109, 33, 119, 0.2),
-        inset 0 0 15px rgba(255, 255, 255, 0.5);
-      transition: box-shadow 0.3s ease;
-    }
-
-    form:hover {
-      box-shadow:
-        0 10px 30px rgba(109, 33, 119, 0.3),
-        inset 0 0 20px rgba(255, 255, 255, 0.7);
+      box-shadow: 0 8px 24px rgba(109, 33, 119, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.5);
     }
 
     input[type='file'] {
@@ -57,13 +48,6 @@
       border-radius: 8px;
       border: 1.5px solid #ce93d8;
       padding: 10px;
-      transition: border-color 0.3s;
-    }
-
-    input[type='file']:focus,
-    input[type='file']:hover {
-      border-color: #9c27b0;
-      outline: none;
     }
 
     button {
@@ -74,121 +58,40 @@
       color: white;
       font-weight: 700;
       font-size: 1.1rem;
-      margin: 1rem 0 0;
+      margin-top: 1rem;
       cursor: pointer;
-      transition: background-color 0.3s, box-shadow 0.3s;
-      box-shadow: 0 6px 12px rgba(156, 39, 176, 0.6);
-      user-select: none;
     }
 
-    button:hover,
-    button:focus {
-      background-color: #7b1fa2;
-      box-shadow: 0 8px 20px rgba(123, 31, 162, 0.8);
-      outline: none;
-    }
-
-    video {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
+    video#camera {
       position: fixed;
       top: 0;
       left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
       z-index: 999;
       display: none;
-      background: black;
     }
 
-    /* Botão abrir câmera */
-    #abrirCamera {
-      padding: 14px 30px;
-      margin-bottom: 1.5rem;
-      background: linear-gradient(45deg, #ce93d8, #ab47bc);
-      box-shadow: 0 6px 14px rgba(171, 71, 188, 0.6);
-      border-radius: 14px;
-      font-weight: 700;
-      font-size: 1.2rem;
-      color: white;
-      cursor: pointer;
-      transition: background 0.4s;
-      border: none;
-      user-select: none;
-    }
-
-    #abrirCamera:hover,
-    #abrirCamera:focus {
-      background: linear-gradient(45deg, #ab47bc, #8e24aa);
-      outline: none;
-    }
-
-    /* Botões fixos da câmera */
-    #botoesCamera {
+    .overlay-buttons {
       position: fixed;
       bottom: 30px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 1001;
       display: none;
-      gap: 20px;
       justify-content: center;
-      flex-wrap: nowrap;
+      gap: 20px;
     }
 
-    /* Botão circular estilo câmera */
     #capture {
       width: 70px;
       height: 70px;
       border-radius: 50%;
       background-color: #ab47bc;
       border: none;
-      box-shadow: 0 6px 14px rgba(171, 71, 188, 0.7);
-      cursor: pointer;
-      position: relative;
-      padding: 0;
-      transition: background-color 0.3s, box-shadow 0.3s;
-      user-select: none;
     }
 
-    #capture::before {
-      content: '';
-      position: absolute;
-      top: 21px;
-      left: 21px;
-      width: 28px;
-      height: 21px;
-      border-radius: 5px;
-      background: white;
-      box-shadow: 0 -7px 0 white inset, 28px 0 0 white inset;
-    }
-
-    #capture:hover,
-    #capture:focus {
-      background-color: #8e24aa;
-      box-shadow: 0 8px 18px rgba(142, 36, 170, 0.9);
-      outline: none;
-    }
-
-    /* Estilo de gravação: botão vermelho pulsando */
-    @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
-      }
-      70% {
-        box-shadow: 0 0 10px 15px rgba(255, 0, 0, 0);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
-      }
-    }
-
-    #capture.recording {
-      background-color: #e53935 !important;
-      animation: pulse 1.5s infinite;
-      box-shadow: 0 0 15px 6px rgba(229, 57, 53, 0.9);
-    }
-
-    /* Tela de pré-visualização */
     #preview-fullscreen {
       position: fixed;
       top: 0;
@@ -209,136 +112,47 @@
       max-width: 90vw;
       max-height: 80vh;
       border-radius: 20px;
-      box-shadow:
-        0 6px 20px rgba(109, 33, 119, 0.7),
-        inset 0 0 30px rgba(255, 255, 255, 0.3);
-      user-select: none;
       background-color: black;
     }
 
-    /* Container dos botões da pré-visualização */
     #preview-buttons {
       margin-top: 1.5rem;
       display: flex;
       gap: 1rem;
       justify-content: center;
       flex-wrap: nowrap;
-      width: 100%;
-      max-width: 400px;
     }
-
-    #preview-buttons button {
-      flex: 1;
-      padding: 14px 0;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      user-select: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s, box-shadow 0.3s;
-      color: white;
-      box-shadow: 0 5px 12px rgba(156, 39, 176, 0.7);
-    }
-
-    #botao-usar-imagem {
-      background-color: #7b1fa2;
-    }
-    #botao-usar-imagem:hover,
-    #botao-usar-imagem:focus {
-      background-color: #4a148c;
-      box-shadow: 0 6px 18px rgba(74, 20, 140, 0.9);
-      outline: none;
-    }
-
-    #enviar-video-btn {
-      background-color: #d32f2f;
-      box-shadow: 0 5px 14px rgba(211, 47, 47, 0.8);
-    }
-    #enviar-video-btn:hover,
-    #enviar-video-btn:focus {
-      background-color: #9a1f1f;
-      box-shadow: 0 7px 22px rgba(154, 31, 31, 0.95);
-      outline: none;
-    }
-
-    #botao-refazer {
-      background-color: #9c27b0;
-    }
-    #botao-refazer:hover,
-    #botao-refazer:focus {
-      background-color: #7b1fa2;
-      box-shadow: 0 6px 18px rgba(123, 31, 162, 0.9);
-      outline: none;
-    }
-
-    /* Responsivo */
-    @media (max-width: 600px) {
-      form {
-        width: 90%;
-        padding: 20px;
-      }
-
-      #abrirCamera {
-        width: 90%;
-      }
-
-      #botoesCamera {
-        bottom: 20px;
-      }
-
-      #preview-buttons {
-        flex-direction: column;
-        max-width: 90vw;
-      }
-    }
-
   </style>
 </head>
 <body>
-  <h2>💍 Cabine de Fotos do Casamento</h2>
+  <h2>Cabine de Fotos do Casamento</h2>
 
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <ul style="color: #d32f2f; font-weight: bold;">
-        {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
-
-  <form method="post" enctype="multipart/form-data" id="upload-form">
+  <form method="post" enctype="multipart/form-data">
     <label>
-      📁 Selecionar da galeria:
-      <input type="file" name="imagem" accept="image/*" onchange="document.getElementById('btn-enviar-img').style.display = 'inline-block';" />
+      Selecionar da galeria:
+      <input type="file" name="imagem" accept="image/*" onchange="document.getElementById('btn-enviar-img').style.display = 'inline-block';">
     </label>
-    <button type="submit" id="btn-enviar-img" style="display: none;">✅ Enviar imagem</button>
+    <button type="submit" id="btn-enviar-img" style="display: none;">Enviar imagem</button>
   </form>
 
-  <h3>📷 Tirar foto agora</h3>
+  <h3>Tirar foto agora</h3>
   <button id="abrirCamera">Abrir câmera</button>
 
-  <video id="camera" autoplay playsinline muted></video>
-
+  <video id="camera" autoplay muted playsinline></video>
   <div class="overlay-buttons" id="botoesCamera">
-    <button id="capture" aria-label="Capturar foto ou gravar vídeo"></button>
+    <button id="capture"></button>
   </div>
 
-  <!-- Tela de pré-visualização -->
-  <div id="preview-fullscreen" role="dialog" aria-modal="true" aria-label="Pré-visualização da foto ou vídeo">
-    <img id="preview-img" src="" alt="Pré-visualização da foto" />
+  <div id="preview-fullscreen">
+    <img id="preview-img" style="display: none;" />
     <video id="preview-video" controls style="display: none;"></video>
 
     <div id="preview-buttons">
-      <form method="post" enctype="multipart/form-data" id="photo-form" style="flex: 1; display: flex; gap: 1rem;">
-        <input type="hidden" name="captured_image" id="captured-image" />
-        <!-- Botão para usar imagem -->
-        <button type="submit" id="botao-usar-imagem">✅ Usar esta imagem</button>
-        <!-- Botão para usar vídeo (será adicionado dinamicamente) -->
+      <form id="photo-form" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="captured_image" id="captured-image">
+        <button type="submit" id="botao-usar-imagem">Usar esta imagem</button>
       </form>
-      <!-- Botão para tirar outra foto/vídeo -->
-      <button id="botao-refazer" type="button" onclick="refazer()">🔁 Tirar outra</button>
+      <button type="button" id="botao-refazer" onclick="refazer()">Tirar outra</button>
     </div>
   </div>
 
@@ -351,98 +165,45 @@
     const previewVideo = document.getElementById('preview-video');
     const capturedImageInput = document.getElementById('captured-image');
     const captureBtn = document.getElementById('capture');
-    const photoForm = document.getElementById('photo-form');
     const previewButtons = document.getElementById('preview-buttons');
 
-    let stream = null;
-    let mediaRecorder = null;
-    let videoChunks = [];
-    let isRecording = false;
-    let holdTimer = null;
-    let videoBlob = null;
+    let stream, mediaRecorder, videoChunks = [], isRecording = false, holdTimer = null, videoBlob = null;
 
-    abrirCameraBtn.addEventListener('click', () => {
-      navigator.mediaDevices
-        .getUserMedia({ video: { facingMode: 'environment' }, audio: true })
-        .then((s) => {
+    abrirCameraBtn.onclick = () => {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then(s => {
           stream = s;
           video.srcObject = stream;
           video.style.display = 'block';
           botoesCamera.style.display = 'flex';
           abrirCameraBtn.style.display = 'none';
         })
-        .catch((err) => {
-          alert('Erro ao acessar a câmera: ' + err.message);
-        });
-    });
+        .catch(err => alert('Erro ao acessar a câmera: ' + err.message));
+    };
 
-    captureBtn.addEventListener('click', () => {
+    captureBtn.onclick = () => {
       if (!isRecording) capturarFoto();
-    });
+    };
 
-    captureBtn.addEventListener('mousedown', () => {
-      holdTimer = setTimeout(() => {
-        iniciarGravacao();
-      }, 400);
-    });
-
-    captureBtn.addEventListener('mouseup', () => {
+    captureBtn.onmousedown = () => {
+      holdTimer = setTimeout(() => iniciarGravacao(), 400);
+    };
+    captureBtn.onmouseup = captureBtn.onmouseleave = () => {
       clearTimeout(holdTimer);
       if (isRecording) pararGravacao();
-    });
-
-    captureBtn.addEventListener('mouseleave', () => {
-      if (isRecording) pararGravacao();
-      clearTimeout(holdTimer);
-    });
-
-    captureBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      holdTimer = setTimeout(() => {
-        iniciarGravacao();
-      }, 400);
-    });
-
-    captureBtn.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      clearTimeout(holdTimer);
-      if (isRecording) pararGravacao();
-      else capturarFoto();
-    });
-
-    captureBtn.addEventListener('touchcancel', (e) => {
-      if (isRecording) pararGravacao();
-      clearTimeout(holdTimer);
-    });
+    };
 
     function capturarFoto() {
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const context = canvas.getContext('2d');
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+      canvas.getContext('2d').drawImage(video, 0, 0);
       const dataURL = canvas.toDataURL('image/jpeg');
       capturedImageInput.value = dataURL;
       previewImg.src = dataURL;
-
       previewImg.style.display = 'block';
       previewVideo.style.display = 'none';
-
-      video.pause();
-      stream.getTracks().forEach((track) => track.stop());
-      video.style.display = 'none';
-      botoesCamera.style.display = 'none';
-      previewFullscreen.style.display = 'flex';
-
-      // Mostrar botão "Usar esta imagem"
-      document.getElementById('botao-usar-imagem').style.display = 'inline-block';
-
-      // Remover botão de vídeo se existir
-      const botaoVideo = document.getElementById('enviar-video-btn');
-      if (botaoVideo) botaoVideo.remove();
-
-      videoBlob = null;
+      finalizarCamera();
     }
 
     function iniciarGravacao() {
@@ -450,25 +211,17 @@
       isRecording = true;
       videoChunks = [];
       mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = (e) => videoChunks.push(e.data);
+      mediaRecorder.ondataavailable = e => videoChunks.push(e.data);
       mediaRecorder.onstop = () => {
         videoBlob = new Blob(videoChunks, { type: 'video/webm' });
         const url = URL.createObjectURL(videoBlob);
         previewVideo.src = url;
         previewVideo.style.display = 'block';
         previewImg.style.display = 'none';
-
-        video.pause();
-        stream.getTracks().forEach((track) => track.stop());
-        video.style.display = 'none';
-        botoesCamera.style.display = 'none';
-        previewFullscreen.style.display = 'flex';
-        captureBtn.classList.remove('recording');
-
         adicionarBotaoVideo();
+        finalizarCamera();
       };
       mediaRecorder.start();
-      captureBtn.classList.add('recording');
     }
 
     function pararGravacao() {
@@ -477,53 +230,45 @@
       mediaRecorder.stop();
     }
 
+    function finalizarCamera() {
+      video.pause();
+      stream.getTracks().forEach(track => track.stop());
+      video.style.display = 'none';
+      botoesCamera.style.display = 'none';
+      previewFullscreen.style.display = 'flex';
+    }
+
     function refazer() {
       previewFullscreen.style.display = 'none';
-      previewImg.src = '';
-      previewVideo.src = '';
       previewImg.style.display = 'none';
       previewVideo.style.display = 'none';
+      previewImg.src = '';
+      previewVideo.src = '';
       capturedImageInput.value = '';
       videoBlob = null;
       abrirCameraBtn.style.display = 'inline-block';
-
-      // Remove botão de vídeo se existir
       const botaoVideo = document.getElementById('enviar-video-btn');
       if (botaoVideo) botaoVideo.remove();
-
-      // Mostrar botão "Usar esta imagem"
-      document.getElementById('botao-usar-imagem').style.display = 'inline-block';
     }
 
     function adicionarBotaoVideo() {
-      // Oculta o botão usar imagem
       document.getElementById('botao-usar-imagem').style.display = 'none';
-
-      // Remove
-  const botao = document.createElement('button');
-  botao.id = 'enviar-video-btn';
-  botao.textContent = '✅ Usar este vídeo';
-  botao.type = 'button';
-  botao.onclick = () => {
-    const formData = new FormData();
-    formData.append('video_blob', videoBlob, 'video.webm');
-
-    fetch('/', {
-      method: 'POST',
-      body: formData
-    })
-      .then(res => {
-        if (res.redirected) {
-          window.location.href = res.url;
-        } else {
-          alert("Vídeo enviado, mas sem redirecionamento.");
-        }
-      })
-      .catch(err => {
-        alert('Erro ao enviar vídeo: ' + err.message);
-      });
-  };
-
-  previewButtons.insertBefore(botao, document.getElementById('botao-refazer'));
-}
-</script> </body> </html>
+      const botao = document.createElement('button');
+      botao.id = 'enviar-video-btn';
+      botao.textContent = 'Usar este vídeo';
+      botao.type = 'button';
+      botao.onclick = () => {
+        const formData = new FormData();
+        formData.append('video_blob', videoBlob, 'video.webm');
+        fetch('/', { method: 'POST', body: formData })
+          .then(res => {
+            if (res.redirected) window.location.href = res.url;
+            else alert('Vídeo enviado, mas sem redirecionamento.');
+          })
+          .catch(err => alert('Erro ao enviar vídeo: ' + err.message));
+      };
+      previewButtons.insertBefore(botao, document.getElementById('botao-refazer'));
+    }
+  </script>
+</body>
+</html>
