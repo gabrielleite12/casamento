@@ -2,23 +2,23 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Cabine de Fotos - Casamento</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capturar ou Enviar Imagem</title>
   <style>
     * {
       box-sizing: border-box;
     }
 
     body {
-      margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(to right, #fff0f5, #e6e6fa);
+      margin: 0;
+      padding: 0;
       color: #333;
       text-align: center;
     }
 
-    h2, h3 {
-      margin: 20px 0 10px;
+    h2, h3, h4 {
+      margin-top: 20px;
       color: #6a1b9a;
     }
 
@@ -32,13 +32,13 @@
     }
 
     input[type="file"] {
+      margin-top: 10px;
       display: block;
-      margin: 10px auto;
       width: 100%;
     }
 
     button {
-      padding: 14px 20px;
+      padding: 10px 20px;
       background-color: #ab47bc;
       border: none;
       border-radius: 8px;
@@ -53,50 +53,32 @@
       background-color: #8e24aa;
     }
 
-    video {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 999;
+    video, canvas {
+      width: 100%;
+      max-width: 360px;
+      margin-top: 10px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      color: green;
+      font-weight: bold;
+    }
+
+    #preview-container {
+      margin-top: 20px;
       display: none;
     }
 
-    #preview-fullscreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: black;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      z-index: 1000;
+    #capture-button {
+      background-color: #7b1fa2;
     }
 
-    #preview-img {
-      max-width: 100%;
-      max-height: 100vh;
-    }
-
-    .overlay-buttons {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1001;
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    #abrirCamera {
-      margin-bottom: 10px;
+    #capture-button:hover {
+      background-color: #6a1b9a;
     }
 
     @media (max-width: 600px) {
@@ -106,17 +88,13 @@
 
       button {
         width: 100%;
-      }
-
-      .overlay-buttons {
-        bottom: 10px;
-        flex-direction: column;
+        margin-bottom: 10px;
       }
     }
   </style>
 </head>
 <body>
-  <h2>💍 Cabine de Fotos do Casamento</h2>
+  <h2>Enviar imagem para Dropbox</h2>
 
   {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -133,82 +111,136 @@
       📁 Selecionar da galeria:
       <input type="file" name="imagem" accept="image/*">
     </label>
+    <br><br>
   </form>
+
+  <h3>📷 Tirar foto ou gravar vídeo</h3>
+  <video id="camera" autoplay></video>
+  <button id="capture-button">📸 Capturar / 🎥 Gravar</button>
 
   <form action="{{ url_for('album') }}" method="get" style="margin-top:20px;">
     <button type="submit" style="padding:10px 20px; font-size:16px; background-color:#6a1b9a; color:white; border:none; border-radius:8px; cursor:pointer;">
-        Visualizar Álbum
+      Visualizar Álbum
     </button>
-</form>
+  </form>
 
-  <h3>📷 Tirar foto agora</h3>
-  <button id="abrirCamera">Abrir câmera</button>
-
-  <video id="camera" autoplay></video>
-  <div class="overlay-buttons" id="botoesCamera" style="display: none;">
-    <button id="capture">📸 Capturar</button>
-  </div>
-
-  <!-- Tela de pré-visualização -->
-  <div id="preview-fullscreen">
-    <img id="preview-img" src="">
-    <div class="overlay-buttons">
-      <form method="post" enctype="multipart/form-data" id="photo-form">
-        <input type="hidden" name="captured_image" id="captured-image">
-        <button type="submit">✅ Usar esta foto</button>
-        <button type="button" onclick="refazer()">🔁 Tirar outra</button>
-      </form>
-    </div>
+  <div id="preview-container">
+    <h4>Pré-visualização</h4>
+    <canvas id="preview"></canvas>
+    <form method="post" enctype="multipart/form-data" id="photo-form">
+      <input type="hidden" name="captured_image" id="captured-image">
+      <button type="submit">✅ Usar esta foto</button>
+      <button type="button" onclick="refazer()">🔁 Tirar outra</button>
+    </form>
   </div>
 
   <script>
-    const abrirCameraBtn = document.getElementById('abrirCamera');
     const video = document.getElementById('camera');
-    const botoesCamera = document.getElementById('botoesCamera');
-    const previewFullscreen = document.getElementById('preview-fullscreen');
-    const previewImg = document.getElementById('preview-img');
+    const canvas = document.getElementById('preview');
+    const previewContainer = document.getElementById('preview-container');
     const capturedImageInput = document.getElementById('captured-image');
-    let stream = null;
+    const captureButton = document.getElementById('capture-button');
 
-    abrirCameraBtn.addEventListener('click', () => {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
-        .then(s => {
-          stream = s;
-          video.srcObject = stream;
-          video.style.display = 'block';
-          botoesCamera.style.display = 'flex';
-          abrirCameraBtn.style.display = 'none';
-        })
-        .catch(err => {
-          alert("Erro ao acessar a câmera: " + err.message);
-        });
-    });
+    let mediaRecorder;
+    let recordedChunks = [];
+    let isRecording = false;
+    let pressTimer;
 
-    document.getElementById('capture').addEventListener('click', () => {
-      const canvas = document.createElement('canvas');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(error => {
+        alert("Erro ao acessar a câmera: " + error.message);
+      });
+
+    function tirarFoto() {
+      const context = canvas.getContext('2d');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const dataURL = canvas.toDataURL('image/jpeg');
       capturedImageInput.value = dataURL;
-      previewImg.src = dataURL;
+      previewContainer.style.display = 'block';
+    }
 
-      // Parar câmera
-      video.pause();
-      stream.getTracks().forEach(track => track.stop());
-      video.style.display = 'none';
-      botoesCamera.style.display = 'none';
+    function iniciarGravacao() {
+      recordedChunks = [];
+      mediaRecorder = new MediaRecorder(video.srcObject, { mimeType: 'video/webm' });
 
-      // Mostrar preview
-      previewFullscreen.style.display = 'flex';
+      mediaRecorder.ondataavailable = function(e) {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = function() {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const videoURL = URL.createObjectURL(blob);
+
+        const recordedVideo = document.createElement('video');
+        recordedVideo.controls = true;
+        recordedVideo.src = videoURL;
+        recordedVideo.style.width = '100%';
+        recordedVideo.style.maxWidth = '360px';
+        recordedVideo.style.marginTop = '10px';
+        recordedVideo.style.borderRadius = '12px';
+        recordedVideo.style.boxShadow = '0 0 10px rgba(0,0,0,0.15)';
+        document.body.appendChild(recordedVideo);
+
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.enctype = 'multipart/form-data';
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'captured_video';
+
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+          input.value = reader.result;
+        };
+
+        const submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.innerText = "✅ Usar este vídeo";
+
+        form.appendChild(input);
+        form.appendChild(submit);
+        document.body.appendChild(form);
+      };
+
+      mediaRecorder.start();
+      isRecording = true;
+      captureButton.textContent = "🔴 Gravando vídeo...";
+
+      setTimeout(() => {
+        if (isRecording) {
+          mediaRecorder.stop();
+          isRecording = false;
+          captureButton.textContent = "📸 Capturar / 🎥 Gravar";
+        }
+      }, 5000);
+    }
+
+    captureButton.addEventListener('mousedown', () => {
+      pressTimer = setTimeout(() => {
+        iniciarGravacao();
+      }, 1000); // segurando por mais de 1 segundo, inicia gravação
+    });
+
+    captureButton.addEventListener('mouseup', () => {
+      clearTimeout(pressTimer);
+      if (!isRecording) tirarFoto(); // se não gravou, tira foto
+    });
+
+    captureButton.addEventListener('mouseleave', () => {
+      clearTimeout(pressTimer);
     });
 
     function refazer() {
-      previewFullscreen.style.display = 'none';
+      previewContainer.style.display = 'none';
       capturedImageInput.value = '';
-      abrirCameraBtn.style.display = 'inline-block';
     }
   </script>
 </body>
