@@ -12,19 +12,22 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      background-color: black;
       font-family: 'Segoe UI', sans-serif;
-      overflow: hidden;
+      background: linear-gradient(to right, #fff0f5, #e6e6fa);
+      color: #333;
     }
 
     #camera-container {
-      position: relative;
+      position: fixed;
+      top: 0; left: 0;
       width: 100vw;
       height: 100vh;
-      display: flex;
+      background-color: black;
+      display: none;
       justify-content: center;
       align-items: center;
-      background-color: black;
+      flex-direction: column;
+      z-index: 999;
     }
 
     video {
@@ -32,8 +35,6 @@
       height: 100vh;
       object-fit: cover;
       position: absolute;
-      top: 0;
-      left: 0;
     }
 
     #controls {
@@ -47,15 +48,17 @@
 
     #top-controls {
       position: absolute;
-      top: 20px;
+      top: 10px;
+      left: 0;
       width: 100%;
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       padding: 0 20px;
+      z-index: 2;
     }
 
     button {
-      padding: 12px 20px;
+      padding: 10px 20px;
       border: none;
       border-radius: 8px;
       background-color: rgba(255, 255, 255, 0.2);
@@ -81,13 +84,13 @@
 
     #preview-container {
       display: none;
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
       background-color: black;
-      z-index: 10;
+      z-index: 1000;
     }
 
     #preview-controls {
@@ -98,16 +101,42 @@
       justify-content: center;
       gap: 20px;
     }
+
+    .main-buttons {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .main-buttons form,
+    .main-buttons button {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
+  <div class="main-buttons">
+    <h2>Enviar imagem para Dropbox</h2>
+    <form method="post" enctype="multipart/form-data">
+      <label>
+        📁 Selecionar da galeria:
+        <input type="file" name="imagem" accept="image/*">
+      </label>
+      <br><br>
+    </form>
+    <button onclick="abrirCamera()">📷 Abrir Câmera</button>
+    <form action="{{ url_for('album') }}" method="get">
+      <button type="submit">📸 Visualizar Álbum</button>
+    </form>
+  </div>
+
   <div id="camera-container">
     <video id="camera" autoplay muted></video>
     <div id="top-controls">
-      <button id="switch-camera">🔄</button>
+      <button onclick="fecharCamera()">❌ Fechar</button>
+      <button id="switch-camera">🔄 Trocar</button>
     </div>
     <div id="controls">
-      <button id="capture">📸</button>
+      <button id="capture">📸 Capturar</button>
     </div>
   </div>
 
@@ -144,9 +173,7 @@
         stream.getTracks().forEach(track => track.stop());
       }
       const constraints = {
-        video: {
-          facingMode: usingFrontCamera ? "user" : "environment"
-        },
+        video: { facingMode: usingFrontCamera ? "user" : "environment" },
         audio: true
       };
       try {
@@ -162,7 +189,17 @@
       startCamera();
     };
 
-    startCamera();
+    function abrirCamera() {
+      document.getElementById('camera-container').style.display = 'flex';
+      startCamera();
+    }
+
+    function fecharCamera() {
+      document.getElementById('camera-container').style.display = 'none';
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    }
 
     let pressTimer;
     const captureBtn = document.getElementById('capture');
