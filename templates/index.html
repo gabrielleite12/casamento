@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Cabine de Fotos - Casamento</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     * {
       box-sizing: border-box;
@@ -17,7 +17,8 @@
       text-align: center;
     }
 
-    h2, h3 {
+    h2,
+    h3 {
       margin: 20px 0 10px;
       color: #6a1b9a;
     }
@@ -31,7 +32,7 @@
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
     }
 
-    input[type="file"] {
+    input[type='file'] {
       display: block;
       margin: 10px auto;
       width: 100%;
@@ -113,37 +114,55 @@
         flex-direction: column;
       }
     }
+
+    /* Botão circular estilo câmera */
     #capture {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: #ab47bc;
-  border: none;
-  box-shadow: 0 4px 8px rgba(171, 71, 188, 0.6);
-  cursor: pointer;
-  position: relative;
-  padding: 0;
-  transition: background-color 0.3s;
-}
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: #ab47bc;
+      border: none;
+      box-shadow: 0 4px 8px rgba(171, 71, 188, 0.6);
+      cursor: pointer;
+      position: relative;
+      padding: 0;
+      transition: background-color 0.3s;
+    }
 
-#capture::before {
-  content: '';
-  position: absolute;
-  top: 18px;
-  left: 18px;
-  width: 24px;
-  height: 18px;
-  border-radius: 4px;
-  background: white;
-  box-shadow:
-    0 -6px 0 white inset,
-    24px 0 0 white inset;
-}
+    #capture::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      width: 24px;
+      height: 18px;
+      border-radius: 4px;
+      background: white;
+      box-shadow: 0 -6px 0 white inset, 24px 0 0 white inset;
+    }
 
-#capture:hover {
-  background-color: #8e24aa;
-}
+    #capture:hover {
+      background-color: #8e24aa;
+    }
 
+    /* Estilo de gravação: botão vermelho pulsando */
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 10px 15px rgba(255, 0, 0, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+      }
+    }
+
+    #capture.recording {
+      background-color: #e53935 !important;
+      animation: pulse 1.5s infinite;
+      box-shadow: 0 0 15px 5px rgba(229, 57, 53, 0.8);
+    }
   </style>
 </head>
 <body>
@@ -152,9 +171,9 @@
   {% with messages = get_flashed_messages() %}
     {% if messages %}
       <ul>
-      {% for message in messages %}
-        <li>{{ message }}</li>
-      {% endfor %}
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
       </ul>
     {% endif %}
   {% endwith %}
@@ -162,7 +181,7 @@
   <form method="post" enctype="multipart/form-data" id="upload-form">
     <label>
       📁 Selecionar da galeria:
-      <input type="file" name="imagem" accept="image/*">
+      <input type="file" name="imagem" accept="image/*" />
     </label>
   </form>
 
@@ -176,10 +195,10 @@
 
   <!-- Tela de pré-visualização -->
   <div id="preview-fullscreen">
-    <img id="preview-img" src="">
+    <img id="preview-img" src="" />
     <div class="overlay-buttons">
       <form method="post" enctype="multipart/form-data" id="photo-form">
-        <input type="hidden" name="captured_image" id="captured-image">
+        <input type="hidden" name="captured_image" id="captured-image" />
         <button type="submit">✅ Usar esta foto</button>
         <button type="button" onclick="refazer()">🔁 Tirar outra</button>
       </form>
@@ -193,23 +212,45 @@
     const previewFullscreen = document.getElementById('preview-fullscreen');
     const previewImg = document.getElementById('preview-img');
     const capturedImageInput = document.getElementById('captured-image');
+    const captureBtn = document.getElementById('capture');
+
     let stream = null;
+    let mediaRecorder = null;
+    let videoChunks = [];
+    let isRecording = false;
+    let holdTimer = null;
 
     abrirCameraBtn.addEventListener('click', () => {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
-        .then(s => {
+      navigator.mediaDevices
+        .getUserMedia({ video: { facingMode: 'environment' }, audio: true })
+        .then((s) => {
           stream = s;
           video.srcObject = stream;
           video.style.display = 'block';
           botoesCamera.style.display = 'flex';
           abrirCameraBtn.style.display = 'none';
         })
-        .catch(err => {
-          alert("Erro ao acessar a câmera: " + err.message);
+        .catch((err) => {
+          alert('Erro ao acessar a câmera: ' + err.message);
         });
     });
 
-    document.getElementById('capture').addEventListener('click', () => {
+    captureBtn.addEventListener('click', () => {
+      if (!isRecording) capturarFoto();
+    });
+
+    captureBtn.addEventListener('mousedown', () => {
+      holdTimer = setTimeout(() => {
+        iniciarGravacao();
+      }, 400); // segurar >400ms inicia gravação
+    });
+
+    captureBtn.addEventListener('mouseup', () => {
+      clearTimeout(holdTimer);
+      if (isRecording) pararGravacao();
+    });
+
+    function capturarFoto() {
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -222,13 +263,47 @@
 
       // Parar câmera
       video.pause();
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       video.style.display = 'none';
       botoesCamera.style.display = 'none';
 
       // Mostrar preview
       previewFullscreen.style.display = 'flex';
-    });
+    }
+
+    function iniciarGravacao() {
+      isRecording = true;
+      videoChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = (e) => videoChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(videoChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        previewImg.src = url;
+        capturedImageInput.value = ''; // vídeo não é enviado
+
+        // Parar câmera
+        video.pause();
+        stream.getTracks().forEach((track) => track.stop());
+        video.style.display = 'none';
+        botoesCamera.style.display = 'none';
+
+        // Mostrar preview
+        previewFullscreen.style.display = 'flex';
+
+        // Remove efeito gravação do botão
+        captureBtn.classList.remove('recording');
+      };
+      mediaRecorder.start();
+
+      // Adiciona efeito gravação no botão
+      captureBtn.classList.add('recording');
+    }
+
+    function pararGravacao() {
+      isRecording = false;
+      mediaRecorder.stop();
+    }
 
     function refazer() {
       previewFullscreen.style.display = 'none';
@@ -237,4 +312,4 @@
     }
   </script>
 </body>
-</html> assim que ira ficar ? 
+</html>
