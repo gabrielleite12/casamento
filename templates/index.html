@@ -127,6 +127,7 @@
       position: relative;
       padding: 0;
       transition: background-color 0.3s;
+      user-select: none;
     }
 
     #capture::before {
@@ -235,19 +236,46 @@
         });
     });
 
+    // Clique rápido tira foto
     captureBtn.addEventListener('click', () => {
       if (!isRecording) capturarFoto();
     });
 
+    // Pressionar e segurar inicia gravação
     captureBtn.addEventListener('mousedown', () => {
       holdTimer = setTimeout(() => {
         iniciarGravacao();
-      }, 400); // segurar >400ms inicia gravação
+      }, 400); // Pressionar por mais de 400ms inicia gravação
     });
 
     captureBtn.addEventListener('mouseup', () => {
       clearTimeout(holdTimer);
       if (isRecording) pararGravacao();
+    });
+
+    captureBtn.addEventListener('mouseleave', () => {
+      if (isRecording) pararGravacao();
+      clearTimeout(holdTimer);
+    });
+
+    // Suporte a toque para mobile
+    captureBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      holdTimer = setTimeout(() => {
+        iniciarGravacao();
+      }, 400);
+    });
+
+    captureBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      clearTimeout(holdTimer);
+      if (isRecording) pararGravacao();
+      else capturarFoto();
+    });
+
+    captureBtn.addEventListener('touchcancel', (e) => {
+      if (isRecording) pararGravacao();
+      clearTimeout(holdTimer);
     });
 
     function capturarFoto() {
@@ -272,6 +300,7 @@
     }
 
     function iniciarGravacao() {
+      if (isRecording) return;
       isRecording = true;
       videoChunks = [];
       mediaRecorder = new MediaRecorder(stream);
@@ -301,6 +330,7 @@
     }
 
     function pararGravacao() {
+      if (!isRecording) return;
       isRecording = false;
       mediaRecorder.stop();
     }
