@@ -51,6 +51,7 @@
       justify-content: center;
       align-items: center;
       z-index: 1000;
+      flex-direction: column;
     }
 
     .fullscreen img,
@@ -60,13 +61,35 @@
       border-radius: 10px;
     }
 
-    .fullscreen:after {
-      content: '✖';
-      position: absolute;
-      top: 15px;
-      right: 25px;
-      font-size: 2rem;
+    .fullscreen button {
+      background: none;
+      border: none;
       color: white;
+      font-size: 2rem;
+      cursor: pointer;
+    }
+
+    .fullscreen-controls {
+      position: absolute;
+      width: 100%;
+      top: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .fullscreen-bottom {
+      margin-top: 10px;
+    }
+
+    .fullscreen-bottom button {
+      background: #6a1b9a;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 6px 12px;
+      font-size: 1rem;
       cursor: pointer;
     }
   </style>
@@ -77,7 +100,7 @@
   {% if arquivos %}
   <div class="gallery">
     {% for arq in arquivos %}
-      <div class="gallery-item" onclick="abrirFullscreen('{{ arq.link }}', '{{ arq.tipo }}')">
+      <div class="gallery-item" onclick="abrirFullscreen('{{ arq.link }}', '{{ arq.tipo }}', {{ loop.index0 }})">
         {% if arq.tipo == 'imagem' %}
           <img src="{{ arq.link }}" alt="Foto">
         {% else %}
@@ -91,12 +114,25 @@
   {% endif %}
 
   <div id="fullscreen" class="fullscreen" onclick="fecharFullscreen()">
+    <div class="fullscreen-controls">
+      <button onclick="anterior(event)">⬅️</button>
+      <span style="font-size: 2rem; color: white; cursor: pointer;" onclick="fecharFullscreen()">✖</span>
+      <button onclick="proximo(event)">➡️</button>
+    </div>
     <img id="fullscreen-img" style="display: none;" />
     <video id="fullscreen-video" style="display: none;" controls autoplay></video>
+    <div class="fullscreen-bottom">
+      <button onclick="forcarFullscreen(event)">🔍 Ver em Tela Cheia</button>
+    </div>
   </div>
 
   <script>
-    function abrirFullscreen(link, tipo) {
+    let arquivos = {{ arquivos | tojson | safe }};
+    let indiceAtual = 0;
+
+    function abrirFullscreen(link, tipo, index = 0) {
+      indiceAtual = index;
+
       const fullscreen = document.getElementById('fullscreen');
       const img = document.getElementById('fullscreen-img');
       const vid = document.getElementById('fullscreen-video');
@@ -112,15 +148,50 @@
         vid.style.display = 'block';
         img.style.display = 'none';
       }
+
+      if (fullscreen.requestFullscreen) fullscreen.requestFullscreen();
     }
 
     function fecharFullscreen() {
       const fullscreen = document.getElementById('fullscreen');
+      const img = document.getElementById('fullscreen-img');
+      const vid = document.getElementById('fullscreen-video');
+
       fullscreen.style.display = 'none';
-      document.getElementById('fullscreen-img').src = '';
-      document.getElementById('fullscreen-video').pause();
-      document.getElementById('fullscreen-video').src = '';
+      img.src = '';
+      vid.pause();
+      vid.src = '';
+
+      if (document.fullscreenElement) document.exitFullscreen();
     }
+
+    function proximo(e) {
+      e.stopPropagation();
+      indiceAtual = (indiceAtual + 1) % arquivos.length;
+      const arq = arquivos[indiceAtual];
+      abrirFullscreen(arq.link, arq.tipo, indiceAtual);
+    }
+
+    function anterior(e) {
+      e.stopPropagation();
+      indiceAtual = (indiceAtual - 1 + arquivos.length) % arquivos.length;
+      const arq = arquivos[indiceAtual];
+      abrirFullscreen(arq.link, arq.tipo, indiceAtual);
+    }
+
+    function forcarFullscreen(e) {
+      e.stopPropagation();
+      const fullscreen = document.getElementById('fullscreen');
+      if (fullscreen.requestFullscreen) fullscreen.requestFullscreen();
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (document.getElementById('fullscreen').style.display === 'flex') {
+        if (e.key === 'Escape') fecharFullscreen();
+        if (e.key === 'ArrowRight') proximo(e);
+        if (e.key === 'ArrowLeft') anterior(e);
+      }
+    });
   </script>
 </body>
 </html>
