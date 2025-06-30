@@ -21,7 +21,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        # 📁 Upload tradicional da galeria
+        # Upload imagem tradicional
         if 'imagem' in request.files and request.files['imagem'].filename != '':
             imagem = request.files['imagem']
             nome_arquivo = secure_filename(imagem.filename)
@@ -30,8 +30,8 @@ def index():
             flash("Imagem enviada com sucesso!")
             return redirect("/")
 
-        # 📷 Upload via câmera - Foto
-        if 'captured_image' in request.form and request.form['captured_image']:
+        # Upload foto via câmera
+        if 'captured_image' in request.form:
             data_url = request.form['captured_image']
             if data_url.startswith("data:image"):
                 header, encoded = data_url.split(",", 1)
@@ -42,8 +42,8 @@ def index():
                 flash("Foto tirada e enviada com sucesso!")
                 return redirect("/")
 
-        # 🎥 Upload via câmera - Vídeo
-        if 'captured_video' in request.form and request.form['captured_video']:
+        # Upload vídeo via câmera (novo)
+        if 'captured_video' in request.form:
             data_url = request.form['captured_video']
             if data_url.startswith("data:video"):
                 header, encoded = data_url.split(",", 1)
