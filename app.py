@@ -42,7 +42,6 @@ def get_dropbox_access_token():
 def get_dropbox_client():
     access_token = get_dropbox_access_token()
     return dropbox.Dropbox(access_token)
-
 @app.route("/auth")
 def auth():
     """Inicia autenticação Dropbox."""
@@ -69,7 +68,26 @@ def oauth_callback():
         refresh_token = data.get("refresh_token")
         with open(REFRESH_TOKEN_PATH, "w") as f:
             f.write(refresh_token)
-        return "Autorizado com sucesso! Pode voltar ao sistema principal."
+
+        # Exibe mensagem com redirecionamento e GIF
+        return """
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Autorizado!</title>
+            <script>
+                setTimeout(function() {
+                    window.location.href = "/";
+                }, 5000); // 5 segundos
+            </script>
+        </head>
+        <body style="font-family: sans-serif; text-align: center; padding: 40px;">
+            <h2>✅ Autorizado com sucesso!</h2>
+            <p>Você será redirecionado automaticamente para o sistema principal em alguns segundos...</p>
+            <img src="/static/loading.gif" alt="Carregando..." style="margin-top:20px; width:450px; height:auto;">
+        </body>
+        </html>
+        """
     else:
         return f"Erro ao autorizar: {response.text}"
 
