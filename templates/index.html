@@ -29,6 +29,59 @@
       text-shadow: 1px 1px 4px rgba(180, 120, 180, 0.6);
     }
 
+    .botao-acoes {
+      display: inline-block;
+      padding: 14px 30px;
+      background: linear-gradient(45deg, #ce93d8, #ab47bc);
+      box-shadow: 0 6px 14px rgba(171, 71, 188, 0.6);
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: white;
+      cursor: pointer;
+      transition: background 0.4s;
+      border: none;
+      user-select: none;
+      text-decoration: none;
+      text-align: center;
+      line-height: 1.3;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      /* Normalize para botão */
+      -webkit-appearance: none; /* Remove estilo padrão em Safari/Chrome */
+      -moz-appearance: none;    /* Remove estilo padrão em Firefox */
+      appearance: none;
+    }
+
+    .botao-acoes:hover,
+    .botao-acoes:focus {
+      background: linear-gradient(45deg, #ab47bc, #8e24aa);
+      outline: none;
+    }
+
+    button.botao-acoes {
+      /* Remover bordas internas/padding extras que browsers colocam em botões */
+      padding: 14px 30px;
+      border: none;
+      background: linear-gradient(45deg, #ce93d8, #ab47bc);
+      box-shadow: 0 6px 14px rgba(171, 71, 188, 0.6);
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: white;
+      cursor: pointer;
+      user-select: none;
+      line-height: 1.3;
+      font-family: inherit;
+    }
+
+
+
+    .botao-acoes:hover,
+    .botao-acoes:focus {
+      background: linear-gradient(45deg, #ab47bc, #8e24aa);
+      outline: none;
+    }
+
     form {
       margin: 1rem auto 2rem;
       max-width: 400px;
@@ -36,6 +89,11 @@
       padding: 25px 30px;
       border-radius: 20px;
       box-shadow: 0 8px 24px rgba(109, 33, 119, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.5);
+      transition: box-shadow 0.3s ease;
+    }
+
+    form:hover {
+      box-shadow: 0 10px 30px rgba(109, 33, 119, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.7);
     }
 
     input[type='file'] {
@@ -48,6 +106,13 @@
       border-radius: 8px;
       border: 1.5px solid #ce93d8;
       padding: 10px;
+      transition: border-color 0.3s;
+    }
+
+    input[type='file']:focus,
+    input[type='file']:hover {
+      border-color: #9c27b0;
+      outline: none;
     }
 
     button {
@@ -58,30 +123,42 @@
       color: white;
       font-weight: 700;
       font-size: 1.1rem;
-      margin-top: 1rem;
+      margin: 1rem 0 0;
       cursor: pointer;
+      transition: background-color 0.3s, box-shadow 0.3s;
+      box-shadow: 0 6px 12px rgba(156, 39, 176, 0.6);
+      user-select: none;
     }
 
-    video#camera {
-      position: fixed;
-      top: 0;
-      left: 0;
+    button:hover,
+    button:focus {
+      background-color: #7b1fa2;
+      box-shadow: 0 8px 20px rgba(123, 31, 162, 0.8);
+      outline: none;
+    }
+
+    video {
       width: 100vw;
       height: 100vh;
       object-fit: cover;
+      position: fixed;
+      top: 0;
+      left: 0;
       z-index: 999;
       display: none;
+      background: black;
     }
 
-    .overlay-buttons {
+    #botoesCamera {
       position: fixed;
       bottom: 30px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 1001;
       display: none;
-      justify-content: center;
       gap: 20px;
+      justify-content: center;
+      flex-wrap: nowrap;
     }
 
     #capture {
@@ -90,17 +167,49 @@
       border-radius: 50%;
       background-color: #ab47bc;
       border: none;
+      box-shadow: 0 6px 14px rgba(171, 71, 188, 0.7);
+      cursor: pointer;
+      position: relative;
+      padding: 0;
+      transition: background-color 0.3s, box-shadow 0.3s;
+      user-select: none;
     }
 
-    #capture.recording {
-      background-color: red;
-      animation: pulse 1.5s infinite;
+    #capture::before {
+      content: '';
+      position: absolute;
+      top: 21px;
+      left: 21px;
+      width: 28px;
+      height: 21px;
+      border-radius: 5px;
+      background: white;
+      box-shadow: 0 -7px 0 white inset, 28px 0 0 white inset;
+    }
+
+    #capture:hover,
+    #capture:focus {
+      background-color: #8e24aa;
+      box-shadow: 0 8px 18px rgba(142, 36, 170, 0.9);
+      outline: none;
     }
 
     @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-      70% { box-shadow: 0 0 0 15px rgba(255, 0, 0, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+      0% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 10px 15px rgba(255, 0, 0, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+      }
+    }
+
+    #capture.recording {
+      background-color: #e53935 !important;
+      animation: pulse 1.5s infinite;
+      box-shadow: 0 0 15px 6px rgba(229, 57, 53, 0.9);
     }
 
     #preview-fullscreen {
@@ -121,14 +230,11 @@
     #preview-img,
     #preview-video {
       max-width: 90vw;
-      max-height: 70vh;
+      max-height: 80vh;
       border-radius: 20px;
-      box-shadow:
-        0 6px 20px rgba(109, 33, 119, 0.7),
-        inset 0 0 30px rgba(255, 255, 255, 0.3);
+      box-shadow: 0 6px 20px rgba(109, 33, 119, 0.7), inset 0 0 30px rgba(255, 255, 255, 0.3);
       user-select: none;
       background-color: black;
-      margin-bottom: 1rem;
     }
 
     #preview-buttons {
@@ -137,123 +243,269 @@
       gap: 1rem;
       justify-content: center;
       flex-wrap: nowrap;
+      width: 100%;
+      max-width: 400px;
     }
 
-    /* Novos botões no topo */
-    .top-button {
-      position: fixed;
-      top: 20px;
-      z-index: 1002;
-      padding: 10px 14px;
-      font-size: 1.3rem;
-      background-color: rgba(255, 255, 255, 0.8);
-      border: 2px solid #6a1b9a;
-      color: #6a1b9a;
-      border-radius: 10px;
+    #preview-buttons button {
+      flex: 1;
+      padding: 14px 0;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      user-select: none;
+      border: none;
       cursor: pointer;
+      transition: background-color 0.3s, box-shadow 0.3s;
+      color: white;
+      box-shadow: 0 5px 12px rgba(156, 39, 176, 0.7);
     }
 
-    #trocarCamera { left: 20px; display: none; }
-    #fecharCamera { right: 20px; display: none; }
+    #botao-usar-imagem {
+      background-color: #7b1fa2;
+    }
 
+    #botao-usar-imagem:hover,
+    #botao-usar-imagem:focus {
+      background-color: #4a148c;
+      box-shadow: 0 6px 18px rgba(74, 20, 140, 0.9);
+      outline: none;
+    }
+
+    #enviar-video-btn {
+      background-color: #d32f2f;
+      box-shadow: 0 5px 14px rgba(211, 47, 47, 0.8);
+    }
+
+    #enviar-video-btn:hover,
+    #enviar-video-btn:focus {
+      background-color: #9a1f1f;
+      box-shadow: 0 7px 22px rgba(154, 31, 31, 0.95);
+      outline: none;
+    }
+
+    #botao-refazer {
+      background-color: #9c27b0;
+    }
+
+    #botao-refazer:hover,
+    #botao-refazer:focus {
+      background-color: #7b1fa2;
+      box-shadow: 0 6px 18px rgba(123, 31, 162, 0.9);
+      outline: none;
+    }
+
+    @media (max-width: 600px) {
+      form {
+        width: 90%;
+        padding: 20px;
+      }
+
+      .acoes {
+        flex-direction: column;
+      }
+
+      .botao-acoes {
+        width: 100%;
+      }
+
+      #botoesCamera {
+        bottom: 20px;
+      }
+
+      #preview-buttons {
+        flex-direction: column;
+        max-width: 90vw;
+      }
+    }
   </style>
 </head>
 <body>
-  <h2>💍 Cabine de Fotos do Casamento</h2>
+  <h2>💍 Cabine de Momentos do Casamento</h2>
 
-  <form method="post" enctype="multipart/form-data">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul style="color: #d32f2f; font-weight: bold;">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+
+  <form method="post" enctype="multipart/form-data" id="upload-form">
     <label>
-      Selecionar da galeria:
-      <input type="file" name="imagem" accept="image/*" onchange="document.getElementById('btn-enviar-img').style.display = 'inline-block';">
+      📁 Selecionar da galeria:
+      <input type="file" name="imagem" accept="image/*" onchange="document.getElementById('btn-enviar-img').style.display = 'inline-block';" />
     </label>
-    <button type="submit" id="btn-enviar-img" style="display: none;">Enviar imagem</button>
+    <button type="submit" id="btn-enviar-img" style="display: none;">✅ Enviar imagem</button>
   </form>
 
- <h3>Tirar foto agora</h3>
-<button id="abrirCamera">Abrir câmera</button>
+  <h3>📸 Registre um momento inesquecível para os noivos 📸</h3>
 
-<!-- Botão para acessar o álbum -->
-<a href="/album" style="
-  display: inline-block;
-  margin-top: 1rem;
-  padding: 12px 25px;
-  background-color: #6a1b9a;
-  color: white;
-  border-radius: 12px;
-  font-weight: bold;
-  text-decoration: none;
-  border: 2px solid #ab47bc;
-">Ver Álbum</a>
+  <div class="acoes">
+    <a href="/album" class="botao-acoes">📸 Vezulizar Álbum</a>
+    <button id="abrirCamera" class="botao-acoes">📷 Registrar momento</button>
+  </div>
 
-
-
-  <video id="camera" autoplay muted playsinline></video>
-  <button id="trocarCamera" class="top-button">🔁</button>
-  <button id="fecharCamera" class="top-button">❌</button>
+  <video id="camera" autoplay playsinline muted></video>
 
   <div class="overlay-buttons" id="botoesCamera">
-    <button id="capture"></button>
+    <button id="capture" aria-label="Capturar foto ou gravar vídeo"></button>
   </div>
 
   <div id="preview-fullscreen">
-    <img id="preview-img" style="display: none;" />
+    <img id="preview-img" src="" alt="Pré-visualização da foto" />
     <video id="preview-video" controls style="display: none;"></video>
 
     <div id="preview-buttons">
-      <form id="photo-form" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="captured_image" id="captured-image">
-        <button type="submit" id="botao-usar-imagem">Usar esta imagem</button>
+      <form method="post" enctype="multipart/form-data" id="photo-form" style="flex: 1; display: flex; gap: 1rem;">
+        <input type="hidden" name="captured_image" id="captured-image" />
+        <button type="submit" id="botao-usar-imagem">✅ Usar esta imagem</button>
       </form>
-      <button type="button" id="botao-refazer" onclick="refazer()">Tirar outra</button>
+      <button id="botao-refazer" type="button" onclick="refazer()">🔁 Tirar outra</button>
     </div>
   </div>
+
+  <h3 style="margin-top: 2rem;">💌 Deixe uma mensagem para os noivos</h3>
+
+<div class="acoes">
+  <button class="botao-acoes" onclick="abrirMensagemTexto()">📝 Mensagem de Texto</button>
+  <button class="botao-acoes" onclick="abrirMensagemAudio()">🎤 Mensagem de Áudio</button>
+</div>
+
+<!-- Campo de mensagem de texto -->
+<div id="mensagemTextoDiv" style="display: none; margin-top: 1rem;">
+  <textarea id="mensagemTexto" rows="4" style="width: 100%; max-width: 400px; padding: 10px; border-radius: 12px; border: 1.5px solid #ce93d8;"></textarea>
+  <br>
+  <button class="botao-acoes" style="margin-top: 1rem;" onclick="enviarMensagemTexto()">📨 Enviar Mensagem</button>
+</div>
+
+<!-- Tela de gravação de áudio -->
+<div id="gravadorAudio" style="display: none; flex-direction: column; align-items: center; margin-top: 1.5rem;">
+  <button class="botao-acoes" id="botaoGravarAudio">🔴 Gravar Áudio</button>
+  <audio id="audioReproduzir" controls style="display: none; margin-top: 1rem;"></audio>
+  <button class="botao-acoes" style="margin-top: 1rem; display: none;" id="botaoEnviarAudio" onclick="enviarMensagemAudio()">📨 Enviar Áudio</button>
+</div>
+
+<script>
+  function abrirMensagemTexto() {
+    document.getElementById("mensagemTextoDiv").style.display = "block";
+    document.getElementById("gravadorAudio").style.display = "none";
+  }
+
+  function abrirMensagemAudio() {
+    document.getElementById("mensagemTextoDiv").style.display = "none";
+    document.getElementById("gravadorAudio").style.display = "flex";
+  }
+
+  function enviarMensagemTexto() {
+    const texto = document.getElementById("mensagemTexto").value;
+    if (!texto.trim()) {
+      alert("Por favor, digite uma mensagem.");
+      return;
+    }
+    fetch('/mensagem-texto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mensagem: texto })
+    })
+    .then(res => res.ok ? alert("Mensagem enviada com sucesso!") : alert("Erro ao enviar."))
+    .catch(err => alert("Erro: " + err.message));
+  }
+
+  // GRAVAÇÃO DE ÁUDIO
+  let gravador = null;
+  let audioChunks = [];
+
+  const botaoGravar = document.getElementById("botaoGravarAudio");
+  const botaoEnviar = document.getElementById("botaoEnviarAudio");
+  const audioPlayer = document.getElementById("audioReproduzir");
+
+  botaoGravar.addEventListener("click", async () => {
+    if (gravador && gravador.state === "recording") {
+      gravador.stop();
+      botaoGravar.textContent = "🔴 Gravar Áudio";
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      gravador = new MediaRecorder(stream);
+      audioChunks = [];
+
+      gravador.ondataavailable = e => audioChunks.push(e.data);
+      gravador.onstop = () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        audioPlayer.src = url;
+        audioPlayer.style.display = "block";
+        botaoEnviar.style.display = "inline-block";
+        botaoEnviar.blob = blob;
+      };
+
+      gravador.start();
+      botaoGravar.textContent = "⏹️ Parar Gravação";
+    } catch (e) {
+      alert("Erro ao acessar o microfone: " + e.message);
+    }
+  });
+
+  function enviarMensagemAudio() {
+    const blob = botaoEnviar.blob;
+    if (!blob) {
+      alert("Nenhuma gravação disponível.");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("audio", blob, "mensagem_audio.webm");
+    fetch("/mensagem-audio", {
+      method: "POST",
+      body: formData
+    })
+    .then(res => res.ok ? alert("Áudio enviado com sucesso!") : alert("Erro ao enviar o áudio."))
+    .catch(err => alert("Erro: " + err.message));
+  }
+</script>
+
 
   <script>
     const abrirCameraBtn = document.getElementById('abrirCamera');
     const video = document.getElementById('camera');
     const botoesCamera = document.getElementById('botoesCamera');
-    const trocarCameraBtn = document.getElementById('trocarCamera');
-    const fecharCameraBtn = document.getElementById('fecharCamera');
     const previewFullscreen = document.getElementById('preview-fullscreen');
     const previewImg = document.getElementById('preview-img');
     const previewVideo = document.getElementById('preview-video');
     const capturedImageInput = document.getElementById('captured-image');
     const captureBtn = document.getElementById('capture');
+    const photoForm = document.getElementById('photo-form');
     const previewButtons = document.getElementById('preview-buttons');
 
-    let stream, mediaRecorder, videoChunks = [], isRecording = false, holdTimer = null, videoBlob = null;
-    let currentFacingMode = 'user'; // frontal
+    let stream = null;
+    let mediaRecorder = null;
+    let videoChunks = [];
+    let isRecording = false;
+    let holdTimer = null;
+    let videoBlob = null;
 
-    abrirCameraBtn.onclick = () => iniciarCamera(currentFacingMode);
-
-    function iniciarCamera(facingMode) {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: true })
-        .then(s => {
+    abrirCameraBtn.addEventListener('click', () => {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true })
+        .then((s) => {
           stream = s;
           video.srcObject = stream;
           video.style.display = 'block';
           botoesCamera.style.display = 'flex';
           abrirCameraBtn.style.display = 'none';
-          trocarCameraBtn.style.display = 'block';
-          fecharCameraBtn.style.display = 'block';
         })
-        .catch(err => alert('Erro ao acessar a câmera: ' + err.message));
-    }
+        .catch((err) => {
+          alert('Erro ao acessar a câmera: ' + err.message);
+        });
+    });
 
-    trocarCameraBtn.onclick = () => {
-      currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-      if (stream) stream.getTracks().forEach(track => track.stop());
-      iniciarCamera(currentFacingMode);
-    };
-
-    fecharCameraBtn.onclick = () => {
-      if (stream) stream.getTracks().forEach(track => track.stop());
-      video.style.display = 'none';
-      botoesCamera.style.display = 'none';
-      trocarCameraBtn.style.display = 'none';
-      fecharCameraBtn.style.display = 'none';
-      abrirCameraBtn.style.display = 'inline-block';
-    };
+    captureBtn.addEventListener('click', () => {
+      if (!isRecording) capturarFoto();
+    });
 
     captureBtn.addEventListener('mousedown', () => {
       holdTimer = setTimeout(() => iniciarGravacao(), 400);
@@ -265,8 +517,8 @@
     });
 
     captureBtn.addEventListener('mouseleave', () => {
-      clearTimeout(holdTimer);
       if (isRecording) pararGravacao();
+      clearTimeout(holdTimer);
     });
 
     captureBtn.addEventListener('touchstart', (e) => {
@@ -282,42 +534,54 @@
     });
 
     captureBtn.addEventListener('touchcancel', (e) => {
-      e.preventDefault();
-      clearTimeout(holdTimer);
       if (isRecording) pararGravacao();
+      clearTimeout(holdTimer);
     });
 
     function capturarFoto() {
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const dataURL = canvas.toDataURL('image/jpeg');
       capturedImageInput.value = dataURL;
       previewImg.src = dataURL;
       previewImg.style.display = 'block';
       previewVideo.style.display = 'none';
-      finalizarCamera();
+      video.pause();
+      stream.getTracks().forEach(track => track.stop());
+      video.style.display = 'none';
+      botoesCamera.style.display = 'none';
+      previewFullscreen.style.display = 'flex';
+      document.getElementById('botao-usar-imagem').style.display = 'inline-block';
+      const botaoVideo = document.getElementById('enviar-video-btn');
+      if (botaoVideo) botaoVideo.remove();
+      videoBlob = null;
     }
 
     function iniciarGravacao() {
       if (isRecording) return;
       isRecording = true;
-      captureBtn.classList.add('recording');
       videoChunks = [];
       mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = e => videoChunks.push(e.data);
+      mediaRecorder.ondataavailable = (e) => videoChunks.push(e.data);
       mediaRecorder.onstop = () => {
         videoBlob = new Blob(videoChunks, { type: 'video/webm' });
         const url = URL.createObjectURL(videoBlob);
         previewVideo.src = url;
         previewVideo.style.display = 'block';
         previewImg.style.display = 'none';
+        video.pause();
+        stream.getTracks().forEach(track => track.stop());
+        video.style.display = 'none';
+        botoesCamera.style.display = 'none';
+        previewFullscreen.style.display = 'flex';
         captureBtn.classList.remove('recording');
         adicionarBotaoVideo();
-        finalizarCamera();
       };
       mediaRecorder.start();
+      captureBtn.classList.add('recording');
     }
 
     function pararGravacao() {
@@ -326,22 +590,12 @@
       mediaRecorder.stop();
     }
 
-    function finalizarCamera() {
-      video.pause();
-      if (stream) stream.getTracks().forEach(track => track.stop());
-      video.style.display = 'none';
-      botoesCamera.style.display = 'none';
-      trocarCameraBtn.style.display = 'none';
-      fecharCameraBtn.style.display = 'none';
-      previewFullscreen.style.display = 'flex';
-    }
-
     function refazer() {
       previewFullscreen.style.display = 'none';
-      previewImg.style.display = 'none';
-      previewVideo.style.display = 'none';
       previewImg.src = '';
       previewVideo.src = '';
+      previewImg.style.display = 'none';
+      previewVideo.style.display = 'none';
       capturedImageInput.value = '';
       videoBlob = null;
       abrirCameraBtn.style.display = 'inline-block';
@@ -354,16 +608,13 @@
       document.getElementById('botao-usar-imagem').style.display = 'none';
       const botao = document.createElement('button');
       botao.id = 'enviar-video-btn';
-      botao.textContent = 'Usar este vídeo';
+      botao.textContent = '✅ Usar este vídeo';
       botao.type = 'button';
       botao.onclick = () => {
         const formData = new FormData();
         formData.append('video_blob', videoBlob, 'video.webm');
         fetch('/', { method: 'POST', body: formData })
-          .then(res => {
-            if (res.redirected) window.location.href = res.url;
-            else alert('Vídeo enviado, mas sem redirecionamento.');
-          })
+          .then(res => res.redirected ? window.location.href = res.url : alert("Vídeo enviado, mas sem redirecionamento."))
           .catch(err => alert('Erro ao enviar vídeo: ' + err.message));
       };
       previewButtons.insertBefore(botao, document.getElementById('botao-refazer'));
