@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 # Variáveis de ambiente ou diretamente no código (RECOMENDADO: use env no Render)
 APP_KEY = "62a0x76y9e50nk2"
 APP_SECRET = "4qshc24vqj8x0xq"
-REDIRECT_URI = "https://casamento-a0js.onrender.com/oauth_callback"  # Troque pelo domínio do Render depois
+REDIRECT_URI = "http://127.0.0.1:5000/oauth_callback"  # Troque pelo domínio do Render depois
 
 app = Flask(__name__)
 app.secret_key = "segredo_seguro"
@@ -42,6 +42,7 @@ def get_dropbox_access_token():
 def get_dropbox_client():
     access_token = get_dropbox_access_token()
     return dropbox.Dropbox(access_token)
+
 @app.route("/auth")
 def auth():
     """Inicia autenticação Dropbox."""
@@ -90,6 +91,8 @@ def oauth_callback():
         """
     else:
         return f"Erro ao autorizar: {response.text}"
+
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
