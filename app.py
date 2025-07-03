@@ -11,7 +11,7 @@ import json
 # Variáveis de ambiente ou diretamente no código (RECOMENDADO: use env no Render)
 APP_KEY = "62a0x76y9e50nk2"
 APP_SECRET = "4qshc24vqj8x0xq"
-REDIRECT_URI = "https://casamento-a0js.onrender.com/oauth_callback"  # Troque pelo domínio do Render depois
+REDIRECT_URI = "http://127.0.0.1:5000/oauth_callback"  # Troque pelo domínio do Render depois
 
 app = Flask(__name__)
 app.secret_key = "segredo_seguro"
@@ -194,6 +194,9 @@ def mensagem_audio():
         return "Áudio enviado com sucesso", 200
     except Exception as e:
         return f"Erro ao salvar áudio: {e}", 500
+@app.route("/cookies.html")
+def cookies():
+    return render_template("cookies.html")
 
 
 if __name__ == "__main__":
