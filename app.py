@@ -5,11 +5,13 @@ import os
 import requests
 import dropbox
 from werkzeug.utils import secure_filename
+from io import BytesIO
+import json
 
 # Variáveis de ambiente ou diretamente no código (RECOMENDADO: use env no Render)
 APP_KEY = "62a0x76y9e50nk2"
 APP_SECRET = "4qshc24vqj8x0xq"
-REDIRECT_URI = "https://casamento-a0js.onrender.com/oauth_callback"  # Troque pelo domínio do Render depois
+REDIRECT_URI = "http://127.0.0.1:5000/oauth_callback"  # Troque pelo domínio do Render depois
 
 app = Flask(__name__)
 app.secret_key = "segredo_seguro"
@@ -152,6 +154,47 @@ def album():
         print("Erro ao acessar Dropbox:", e)
 
     return render_template('album.html', arquivos=arquivos)
+
+
+
+
+@app.route("/mensagem-texto", methods=["POST"])
+def mensagem_texto():
+    dbx = get_dropbox_client()
+    dados = request.get_json()
+    mensagem = dados.get("mensagem", "").strip()
+
+    if not mensagem:
+        return "Mensagem vazia", 400
+
+    # Nome do arquivo no Dropbox
+    nome = datetime.now().strftime("mensagem_%Y%m%d_%H%M%S.txt")
+    caminho = f"/mensagens/{nome}"
+
+    try:
+        dbx.files_upload(mensagem.encode("utf-8"), caminho)
+        return "Mensagem enviada", 200
+    except Exception as e:
+        return f"Erro ao salvar no Dropbox: {e}", 500
+
+
+@app.route("/mensagem-audio", methods=["POST"])
+def mensagem_audio():
+    dbx = get_dropbox_client()
+
+    if "audio" not in request.files:
+        return "Nenhum áudio enviado", 400
+
+    audio = request.files["audio"]
+    nome = datetime.now().strftime("audio_%Y%m%d_%H%M%S.webm")
+    caminho = f"/mensagens/{nome}"
+
+    try:
+        dbx.files_upload(audio.read(), caminho)
+        return "Áudio enviado com sucesso", 200
+    except Exception as e:
+        return f"Erro ao salvar áudio: {e}", 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
