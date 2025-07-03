@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Permissão de Cookies</title>
+  <style>
+    #cookieConsentOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #cookieConsentModal {
+      background: white;
+      padding: 30px 25px;
+      border-radius: 12px;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #cookieConsentModal img {
+      width: 120px;
+      margin-bottom: 20px;
+    }
+
+    #cookieConsentModal p {
+      font-size: 1.1rem;
+      color: #4a148c;
+      margin-bottom: 25px;
+      font-weight: 600;
+    }
+
+    #acceptCookiesBtn {
+      background: linear-gradient(45deg, #ce93d8, #ab47bc);
+      border: none;
+      color: white;
+      font-weight: 700;
+      font-size: 1.2rem;
+      padding: 14px 25px;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(171, 71, 188, 0.6);
+      transition: background 0.4s;
+      user-select: none;
+    }
+
+    #acceptCookiesBtn:hover,
+    #acceptCookiesBtn:focus {
+      background: linear-gradient(45deg, #ab47bc, #8e24aa);
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Modal de permissão -->
+<div id="cookieConsentOverlay">
+  <div id="cookieConsentModal">
+  <img src="/static/cookies.gif" alt="Cookies GIF" style="margin-top: 20px; width: 450px; height: auto;" />
+    <p>Para utilizar o sistema, aceite todos os cookies e permita o uso da câmera e microfone.</p>
+    <button id="acceptCookiesBtn">Aceitar e Continuar</button>
+  </div>
+</div>
+
+
+<script>
+  const acceptBtn = document.getElementById('acceptCookiesBtn');
+
+  acceptBtn.addEventListener('click', () => {
+    // Primeiro, checa se há dispositivos disponíveis
+    navigator.mediaDevices.enumerateDevices()
+      .then(devices => {
+        const hasVideo = devices.some(device => device.kind === 'videoinput');
+        const hasAudio = devices.some(device => device.kind === 'audioinput');
+
+        if (hasVideo || hasAudio) {
+          return navigator.mediaDevices.getUserMedia({ video: hasVideo, audio: hasAudio });
+        } else {
+          // Se não há dispositivos, resolve direto sem erro
+          return Promise.resolve(null);
+        }
+      })
+      .then(stream => {
+        if (stream) {
+          // Se conseguiu permissão, encerra o stream
+          stream.getTracks().forEach(track => track.stop());
+        }
+
+        localStorage.setItem('cookiesAceitos', 'true');
+        window.location.href = "/";
+      })
+      .catch(err => {
+        alert("Erro ao acessar dispositivos: " + err.message);
+        console.warn("Permissão ignorada. Continuando mesmo sem câmera/microfone.");
+        localStorage.setItem('cookiesAceitos', 'true');
+        window.location.href = "/";
+      });
+  });
+
+  window.addEventListener('load', () => {
+    const aceitou = localStorage.getItem('cookiesAceitos');
+    if (aceitou === 'true') {
+      window.location.href = "/";
+    }
+  });
+</script>
+
+</script>
+
+
+</body>
+</html>
