@@ -531,9 +531,45 @@
         });
     });
 
-    captureBtn.addEventListener('click', () => {
-      if (!isRecording) capturarFoto();
-    });
+    let clickStartTime = 0;
+
+captureBtn.addEventListener('mousedown', () => {
+  clickStartTime = Date.now();
+  holdTimer = setTimeout(() => iniciarGravacao(), 400);
+});
+
+captureBtn.addEventListener('mouseup', () => {
+  clearTimeout(holdTimer);
+  if (!isRecording) {
+    const duration = Date.now() - clickStartTime;
+    if (duration < 400) capturarFoto();
+  } else {
+    pararGravacao();
+  }
+});
+
+captureBtn.addEventListener('mouseleave', () => {
+  clearTimeout(holdTimer);
+  if (isRecording) pararGravacao();
+});
+
+captureBtn.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  clickStartTime = Date.now();
+  holdTimer = setTimeout(() => iniciarGravacao(), 400);
+});
+
+captureBtn.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  clearTimeout(holdTimer);
+  const duration = Date.now() - clickStartTime;
+  if (!isRecording && duration < 400) {
+    capturarFoto();
+  } else if (isRecording) {
+    pararGravacao();
+  }
+});
+
 
     captureBtn.addEventListener('mousedown', () => {
       holdTimer = setTimeout(() => iniciarGravacao(), 400);
