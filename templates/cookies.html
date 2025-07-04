@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Permissão de Cookies</title>
   <style>
+    /* seu CSS do modal igual ao que você já tinha */
     #cookieConsentOverlay {
       position: fixed;
       top: 0;
@@ -12,12 +13,14 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0,0,0,0.6);
-      display: flex;
+      display: none; /* esconder por padrão */
       justify-content: center;
       align-items: center;
       z-index: 9999;
     }
-
+    #cookieConsentOverlay.active {
+      display: flex;
+    }
     #cookieConsentModal {
       background: white;
       padding: 30px 25px;
@@ -27,19 +30,16 @@
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
     #cookieConsentModal img {
       width: 120px;
       margin-bottom: 20px;
     }
-
     #cookieConsentModal p {
       font-size: 1.1rem;
       color: #4a148c;
       margin-bottom: 25px;
       font-weight: 600;
     }
-
     #acceptCookiesBtn {
       background: linear-gradient(45deg, #ce93d8, #ab47bc);
       border: none;
@@ -53,7 +53,6 @@
       transition: background 0.4s;
       user-select: none;
     }
-
     #acceptCookiesBtn:hover,
     #acceptCookiesBtn:focus {
       background: linear-gradient(45deg, #ab47bc, #8e24aa);
@@ -66,57 +65,91 @@
 <!-- Modal de permissão -->
 <div id="cookieConsentOverlay">
   <div id="cookieConsentModal">
-  <img src="/static/cookies.gif" alt="Cookies GIF" style="margin-top: 20px; width: 450px; height: auto;" />
+    <img src="/static/cookies.gif" alt="Cookies GIF" style="margin-top: 20px; width: 450px; height: auto;" />
     <p>Para utilizar o sistema, aceite todos os cookies e permita o uso da câmera e microfone.</p>
     <button id="acceptCookiesBtn">Aceitar e Continuar</button>
   </div>
 </div>
 
-
 <script>
   const acceptBtn = document.getElementById('acceptCookiesBtn');
+  const consentOverlay = document.getElementById('cookieConsentOverlay');
+
+  // Função para verificar permissões da câmera e microfone
+  async function checkPermissions() {
+    try {
+      // Verifica se há microfone e câmera disponíveis
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const hasVideo = devices.some(device => device.kind === 'videoinput');
+      const hasAudio = devices.some(device => device.kind === 'audioinput');
+
+      if (!hasVideo && !hasAudio) {
+        // Não há dispositivos, não precisa mostrar modal
+        return false;
+      }
+
+      // Função auxiliar para checar permissão individualmente
+      async function checkPermission(name) {
+        if (!navigator.permissions) return 'prompt'; // fallback
+        try {
+          const result = await navigator.permissions.query({ name });
+          return result.state; // 'granted', 'denied' ou 'prompt'
+        } catch {
+          return 'prompt'; // caso não suportado, assume prompt
+        }
+      }
+
+      // Checa as permissões
+      const videoPermission = hasVideo ? await checkPermission('camera') : 'granted';
+      const audioPermission = hasAudio ? await checkPermission('microphone') : 'granted';
+
+      // Se alguma permissão não estiver concedida, retorna true para mostrar modal
+      return videoPermission !== 'granted' || audioPermission !== 'granted';
+
+    } catch (error) {
+      // Em caso de erro, por segurança mostra modal
+      return true;
+    }
+  }
+
+  async function init() {
+    const cookiesAceitos = localStorage.getItem('cookiesAceitos');
+    if (cookiesAceitos === 'true') {
+      // Já aceitou antes, segue normalmente
+      window.location.href = "/";
+      return;
+    }
+
+    const deveMostrarModal = await checkPermissions();
+    if (deveMostrarModal) {
+      // Mostra modal para pedir permissão e cookies
+      consentOverlay.classList.add('active');
+    } else {
+      // Permissão já concedida, salva e segue
+      localStorage.setItem('cookiesAceitos', 'true');
+      window.location.href = "/";
+    }
+  }
 
   acceptBtn.addEventListener('click', () => {
-    // Primeiro, checa se há dispositivos disponíveis
-    navigator.mediaDevices.enumerateDevices()
-      .then(devices => {
-        const hasVideo = devices.some(device => device.kind === 'videoinput');
-        const hasAudio = devices.some(device => device.kind === 'audioinput');
-
-        if (hasVideo || hasAudio) {
-          return navigator.mediaDevices.getUserMedia({ video: hasVideo, audio: hasAudio });
-        } else {
-          // Se não há dispositivos, resolve direto sem erro
-          return Promise.resolve(null);
-        }
-      })
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then(stream => {
-        if (stream) {
-          // Se conseguiu permissão, encerra o stream
-          stream.getTracks().forEach(track => track.stop());
-        }
-
+        // Para liberar a câmera/mic após pegar permissão
+        stream.getTracks().forEach(track => track.stop());
         localStorage.setItem('cookiesAceitos', 'true');
         window.location.href = "/";
       })
       .catch(err => {
-        alert("Erro ao acessar dispositivos: " + err.message);
-        console.warn("Permissão ignorada. Continuando mesmo sem câmera/microfone.");
+        alert("Erro ao acessar câmera/microfone: " + err.message);
+        // Mesmo se negar, grava para não ficar preso no modal infinito
         localStorage.setItem('cookiesAceitos', 'true');
         window.location.href = "/";
       });
   });
 
-  window.addEventListener('load', () => {
-    const aceitou = localStorage.getItem('cookiesAceitos');
-    if (aceitou === 'true') {
-      window.location.href = "/";
-    }
-  });
+  // Quando a página carregar, verifica permissões e exibe modal se necessário
+  document.addEventListener('DOMContentLoaded', init);
 </script>
-
-</script>
-
 
 </body>
 </html>
