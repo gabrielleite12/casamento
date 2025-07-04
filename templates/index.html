@@ -255,37 +255,30 @@
 
 
   
-  #preview-buttons {
-    margin-top: 1.5rem;
-    display: flex;
-    flex-direction: row; /* lado a lado */
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap; /* quebra linha se necessário */
-    width: 100%;
-    max-width: 100vw;
-    padding: 0 1rem;
-    box-sizing: border-box;
-  }
+#preview-buttons {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: nowrap; /* não quebra linha */
+  width: 100%;
+  max-width: 100vw;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  overflow-x: auto; /* rolagem lateral se faltar espaço */
+}
 
-
-    #preview-buttons button {
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      user-select: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s, box-shadow 0.3s;
-      color: white;
-      box-shadow: 0 5px 12px rgba(156, 39, 176, 0.7);
-      flex: 1 1 45%;
-      min-width: 120px;
-      max-width: 200px;
-      padding: 14px 0;
-      text-align: center;
-      }
+#preview-buttons button {
+  flex: 1 1 auto;
+  min-width: 140px;
+  max-width: 180px;
+  font-size: 0.95rem;
+  padding: 12px 10px;
+  border-radius: 10px;
+  white-space: nowrap; /* evita quebra do texto */
+}
 
     #botao-usar-imagem {
       background-color: #7b1fa2;
