@@ -212,39 +212,40 @@
       box-shadow: 0 0 15px 6px rgba(229, 57, 53, 0.9);
     }
 
-  #preview-fullscreen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(25, 0, 40, 0.95);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  padding: 1rem;
-}
+    #preview-fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(25, 0, 40, 0.95);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
 
-#preview-video {
-  width: 90vw;
-  height: 65vh;
-  border-radius: 20px;
-  box-shadow: 0 6px 20px rgba(109, 33, 119, 0.7), inset 0 0 30px rgba(255, 255, 255, 0.3);
-  background-color: black;
-}
+    #preview-img,
+    #preview-video {
+      max-width: 90vw;
+      max-height: 80vh;
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(109, 33, 119, 0.7), inset 0 0 30px rgba(255, 255, 255, 0.3);
+      user-select: none;
+      background-color: black;
+    }
 
-#preview-buttons {
-  margin-top: 1.5rem;
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: nowrap;
-  width: 100%;
-  max-width: 400px;
-}
-
+    #preview-buttons {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: nowrap;
+      width: 100%;
+      max-width: 400px;
+    }
 
     #preview-buttons button {
       flex: 1;
@@ -618,6 +619,67 @@
       };
       previewButtons.insertBefore(botao, document.getElementById('botao-refazer'));
     }
+    window.addEventListener('load', () => {
+  const aceitou = localStorage.getItem('cookiesAceitos');
+  const modal = document.getElementById('cookieConsentOverlay');
+  const main = document.getElementById('mainContent');
+
+  if (aceitou === 'true') {
+    modal.style.display = 'none';
+    main.style.display = 'block';
+  } else {
+    modal.style.display = 'flex'; // mostra modal bloqueando acesso
+    main.style.display = 'none';
+  }
+});
+
+document.getElementById('acceptCookiesBtn').addEventListener('click', () => {
+  localStorage.setItem('cookiesAceitos', 'true');
+  // Após aceitar, recarrega a página para carregar o conteúdo
+  window.location.href = '/';
+});
+window.addEventListener('load', () => {
+  const modal = document.getElementById('permissionOverlay');
+  const main = document.getElementById('mainContent');
+
+  function requestPermissions() {
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then(stream => {
+        // Permissão concedida
+        stream.getTracks().forEach(track => track.stop()); // para liberar a câmera/mic após teste
+        localStorage.setItem('permissionsGranted', 'true');
+        modal.style.display = 'none';
+        main.style.display = 'block';
+      })
+      .catch(err => {
+        // Permissão negada
+        localStorage.setItem('permissionsGranted', 'false');
+        modal.style.display = 'flex';
+        main.style.display = 'none';
+      });
+  }
+
+  const hasPermission = localStorage.getItem('permissionsGranted');
+  if (hasPermission === 'true') {
+    modal.style.display = 'none';
+    main.style.display = 'block';
+  } else {
+    // pede permissão
+    requestPermissions();
+  }
+
+  document.getElementById('retryPermissionsBtn').addEventListener('click', () => {
+    requestPermissions();
+  });
+});
+
+
   </script>
+
+  <script>
+  if (localStorage.getItem('cookiesAceitos') !== 'true') {
+    window.location.href = '/cookies.html';
+  }
+</script>
 </body>
 </html>
