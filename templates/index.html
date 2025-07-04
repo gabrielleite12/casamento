@@ -212,20 +212,22 @@
       box-shadow: 0 0 15px 6px rgba(229, 57, 53, 0.9);
     }
 
-    #preview-fullscreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(25, 0, 40, 0.95);
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 1rem;
-    }
+  #preview-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(25, 0, 40, 0.95);
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto; /* Adiciona scroll se conteúdo for maior que a tela */
+}
+
 
 #preview-img {
   max-width: 90vw;
@@ -242,11 +244,15 @@
   height: auto;
   max-height: 80vh;
   border-radius: 20px;
+  background-color: black;
   box-shadow: 0 6px 20px rgba(109, 33, 119, 0.7), inset 0 0 30px rgba(255, 255, 255, 0.3);
   user-select: none;
-  background-color: black;
-  margin-bottom: 1.5rem;
+  display: none;
+  margin-bottom: 2rem; /* IMPORTANTE: espaço para os botões abaixo */
+  position: static;    /* Garante que o vídeo fique dentro do fluxo normal */
+  z-index: auto;       /* Não cobre os botões */
 }
+
 
 
     #preview-buttons {
